@@ -36,7 +36,7 @@ class Condition:
 
     def check_condition(self, events: List) -> bool:
         relevant_events = [events[i] for i in self.event_types_indices]
-        return self.condition_apply_function()
+        return self.condition_apply_function(*relevant_events)
 
 
 class PatternQuery:
