@@ -29,7 +29,8 @@ class Condition:
         ----------
         condition_apply_function: a boolean function that gets the relevant event and applies the condition
         event_indices: the indices of the events in the PatternQuery event_types list
-            to be checked by this condition
+            to be checked by this condition. Note that event_indices needs to be ordered in the order arguments should
+            be passed to the condition_apply_function!
         """
         self.condition_apply_function = condition_apply_function
         self.event_indices = event_indices
