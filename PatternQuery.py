@@ -23,19 +23,29 @@ class Condition:
     """
     this class represents a predicate (for example for events A, B: A.x > B.x)
     """
-    def __init__(self, condition_apply_function: Callable, event_types_indices):
+    def __init__(self, condition_apply_function: Callable, event_indices: List[int]):
         """
         Parameters
         ----------
         condition_apply_function: a boolean function that gets the relevant event and applies the condition
-        event_types_indices: the indices of the events in the PatternQuery event_types list
+        event_indices: the indices of the events in the PatternQuery event_types list
             to be checked by this condition
         """
         self.condition_apply_function = condition_apply_function
-        self.event_types_indices = event_types_indices
+        self.event_indices = event_indices
+
 
     def check_condition(self, events: List) -> bool:
-        relevant_events = [events[i] for i in self.event_types_indices]
+        """
+        Parameters
+        ----------
+        events: the list of all events (or at least a list that contains the relevant indices)
+
+        Returns
+        -------
+        Returns True if the condition holds for the relevant events
+        """
+        relevant_events = [events[i] for i in self.event_indices]
         return self.condition_apply_function(*relevant_events)
 
 
