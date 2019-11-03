@@ -11,8 +11,8 @@ class OperatorApplication:
     """
     this class represents an operator application on some event types.
     for example if A, B, C are event types than this class might represent SEQ(A, B, C)
-    the elements in event_types can be event types or OperatorApplication so we can represent recursive operator application
-    (such as SEQ(A, B, AND(C,D)))
+    the elements in event_types can be event types or OperatorApplication so we can represent recursive operator
+    application (such as SEQ(A, B, AND(C,D)))
     """
     def __init__(self, event_types: List, operator: Operator):
         self.operator = operator
