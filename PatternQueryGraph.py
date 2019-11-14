@@ -37,7 +37,7 @@ class Node:
         pass
 
 
-class ConditionNode:
+class ConditionNode(Node):
     """
     represents an inner node in the graph that holds an operator and a condition list and partial results
     """
