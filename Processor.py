@@ -61,4 +61,4 @@ class Processor:
                 results.append(res)
             next_line = data_stream.readline()
 
-        return results if len(results) != 0 else None
+        return results
