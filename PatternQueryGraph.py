@@ -1,7 +1,7 @@
 from typing import List
 from PatternQuery import Condition, Operator, PatternQuery
 import heapq
-
+from Processor import Event
 
 # class PartialResultIterator:
 #     def __init__(self, partial_result):
@@ -32,35 +32,47 @@ import heapq
 
 
 class Node:
+    """
+    abstract class, predecessor of ConditionNode and EventNode
+    """
+    def __init__(self, conditions: List[Condition] = None, parent=None):
+        if conditions is None:
+            self.conditions = []
+        self.conditions = conditions
+        self.parent = parent
+        self.partial_results_buffer = []
+
     @staticmethod
     def is_event_node() -> bool:
         pass
+
+    def add_condition(self, condition: Condition):
+        self.conditions.append(condition)
+
+    def set_parent(self, parent):
+        self.parent = parent
 
 
 class ConditionNode(Node):
     """
     represents an inner node in the graph that holds an operator and a condition list and partial results
     """
-    def __init__(self, children: List[Node], operator: Operator, conditions: List[Condition]=None, parent: Node=None):
+    def __init__(self, children: List[Node], operator: Operator, conditions: List[Condition] = None, parent=None):
         """
         :param children:
         :param conditions:
         :param operator:
         :param parent:
         """
-        if conditions is None:
-            self.conditions = []
+        super().__init__(conditions, parent)
         self.children = children
-        self.conditions = conditions
         self.operator = operator
-        self.parent = parent
-        self.partial_results_buffer = []
 
     @staticmethod
     def is_event_node() -> bool:
         return False
 
-    def add_partial_result(self, partial_result: List):
+    def add_partial_result(self, partial_result: List[Event]):
         """
         adds a partial result
         :param partial_result: a list contains all the events included in the partial result
@@ -69,30 +81,20 @@ class ConditionNode(Node):
         self.partial_results_buffer.append(partial_result)
         return self
 
-    def add_condition(self, condition: Condition):
-        self.conditions.append(condition)
-
 
 class EventNode(Node):
     """
     represents a leaf node in the graph that holds events
     """
-    def __init__(self, event_type, parent: ConditionNode=None, conditions: List[Condition]=None):
-        if conditions is None:
-            self.conditions = []
+    def __init__(self, event_type, parent: ConditionNode = None, conditions: List[Condition] = None):
+        super().__init__(conditions, parent)
         self.event_type = event_type
-        self.parent = parent
-        self.partial_results_buffer = []
-        self.conditions = conditions
 
     @staticmethod
     def is_event_node() -> bool:
         return True
 
-    def set_parent(self, parent):
-        self.parent = parent
-
-    def add_partial_result(self, partial_result):
+    def add_partial_result(self, partial_result: Event):
         """
         adds a partial result
         :param partial_result: an event corresponding to this leaf node
@@ -100,9 +102,6 @@ class EventNode(Node):
         """
         self.partial_results_buffer.append(partial_result)
         return self
-
-    def add_condition(self, condition: Condition):
-        self.conditions.append(condition)
 
 
 class PatternQueryGraph:

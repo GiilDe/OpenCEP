@@ -7,7 +7,7 @@ class EvaluationModel:
     def handle_event(self, event):
         pass
 
-    def pass_pattern_query(self, pattern_query: PatternQuery):
+    def set_pattern_query(self, pattern_query: PatternQuery):
         pass
 
 
@@ -72,9 +72,8 @@ class GraphBasedProcessing(EvaluationModel):
         """
         self.graph_initializer = graph_initializer
 
-    def pass_pattern_query(self, pattern_query: PatternQuery):
+    def set_pattern_query(self, pattern_query: PatternQuery):
         self.graph = self.graph_initializer.get_graph(pattern_query)
-
 
     def handle_event(self, event):
 
@@ -130,4 +129,4 @@ class Processor:
                 results.append(res)
             next_line = data_stream.readline()
 
-        return results if len(results) == 0 else None
+        return results if len(results) != 0 else None
