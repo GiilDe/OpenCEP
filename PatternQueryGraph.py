@@ -1,5 +1,34 @@
 from typing import List
 from PatternQuery import Condition, Operator, PatternQuery
+import heapq
+
+
+# class PartialResultIterator:
+#     def __init__(self, partial_result):
+#         self._partial_result = partial_result
+#
+#     def __next__(self):
+#         index = 0
+#         length = len(self._partial_result.events)
+#         if index < length:
+#             result = self._partial_result.events[index]
+#             index += 1
+#             return result
+#         # End of Iteration
+#         raise StopIteration
+#
+#
+# class PartialResult:
+#     def __init__(self, events: List):
+#         self.events = events
+#         self.start_time = events[0].time
+#         self.end_time = events[-1].time
+#
+#     def __init__(self, partial_results):
+#         events = heapq.merge(*partial_results)
+#
+#     def __iter__(self):
+#         return PartialResultIterator(self)
 
 
 class Node:
