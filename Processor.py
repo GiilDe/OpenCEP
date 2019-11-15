@@ -61,4 +61,5 @@ class Processor:
                 results.append(res)
             next_line = data_stream.readline()
 
+        data_stream.close()
         return results
