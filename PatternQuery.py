@@ -1,6 +1,6 @@
-from typing import List, Callable
+from typing import List, Callable, Union
 from enum import Enum
-
+from Processor import Event
 
 class Operator(Enum):
     SEQ = 1
@@ -37,11 +37,13 @@ class Condition:
         self.condition_apply_function = condition_apply_function
         self.event_indices = event_indices
 
-    def check_condition(self, events: List) -> bool:
+    def check_condition(self, events: Union[List: Event, Event]) -> bool:
         """
         :param events: the list of relevant events in the order they need to be called in the condition_apply_function
         :return: true if the condition holds for the relevant events
         """
+        if type(events) == Event:
+            return self.condition_apply_function(events)
         return self.condition_apply_function(*events)
 
 

@@ -1,34 +1,38 @@
-from typing import List
+from typing import List, Union
 from PatternQuery import Condition, Operator, PatternQuery
 import heapq
 from Processor import Event
 
-# class PartialResultIterator:
-#     def __init__(self, partial_result):
-#         self._partial_result = partial_result
-#
-#     def __next__(self):
-#         index = 0
-#         length = len(self._partial_result.events)
-#         if index < length:
-#             result = self._partial_result.events[index]
-#             index += 1
-#             return result
-#         # End of Iteration
-#         raise StopIteration
-#
-#
-# class PartialResult:
-#     def __init__(self, events: List):
-#         self.events = events
-#         self.start_time = events[0].time
-#         self.end_time = events[-1].time
-#
-#     def __init__(self, partial_results):
-#         events = heapq.merge(*partial_results)
-#
-#     def __iter__(self):
-#         return PartialResultIterator(self)
+
+class PartialResultIterator:
+    def __init__(self, partial_result):
+        self._partial_result = partial_result
+
+    def __next__(self):
+        index = 0
+        length = len(self._partial_result.events)
+        if index < length:
+            result = self._partial_result.events[index]
+            index += 1
+            return result
+        # End of Iteration
+        raise StopIteration
+
+
+class PartialResult:
+    """
+    just a possible implementation, not finished
+    """
+    def __init__(self, events: List[Event]):
+        self.events = events
+        self.start_time = events[0].time
+        self.end_time = events[-1].time
+
+    def __init__(self, partial_results: List):
+        events = heapq.merge(*partial_results)
+
+    def __iter__(self):
+        return PartialResultIterator(self)
 
 
 class Node:
@@ -51,6 +55,12 @@ class Node:
 
     def set_parent(self, parent):
         self.parent = parent
+
+    def apply_conditions(self, events: Union[List[Event], Event]):
+        for condition in self.conditions:
+            if not condition.check_condition(events):
+                return False
+        return True
 
 
 class ConditionNode(Node):
@@ -108,7 +118,8 @@ class PatternQueryGraph:
     """
     a graph that represents a pattern query without operator nesting
     """
-    def __init__(self, root_node: ConditionNode):
+    def __init__(self, root_node: ConditionNode, event_nodes: List[EventNode]):
         self.root_node = root_node
+        self.event_nodes = event_nodes
 
 

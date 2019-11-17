@@ -28,17 +28,22 @@ class LeftDeepTreeInitializer(GraphInitializer):
         operator = pattern_query.event_pattern.operator
         events = pattern_query.event_pattern.operands
         conditions = pattern_query.conditions
-        parent = EventNode(events[0])
         inner_nodes = []
-        leaves = [parent]
-        if len(events) != 1:
+        old_parent = EventNode(events[0])
+        leaves = [old_parent]
+        if len(events) > 1:
             for event_type in events[1:]:
                 right_child = EventNode(event_type)
                 leaves.append(right_child)
-                parent = ConditionNode([parent, right_child], operator)
-                inner_nodes.append(parent)
+                new_parent = ConditionNode([old_parent, right_child], operator)
+                old_parent.set_parent(new_parent)
+                right_child.set_parent(new_parent)
+                old_parent = new_parent
+                inner_nodes.append(new_parent)
+        else:
+            new_parent = old_parent
 
-        root_node = parent
+        root_node = new_parent
         for condition in conditions:
             if len(condition.event_indices) == 1:
                 leaves[condition.event_indices[0]].add_condition(condition)
@@ -46,7 +51,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
                 max_index = max(condition.event_indices)
                 inner_nodes[max_index - 1].add_condition(condition)
 
-        pattern_query_graph = PatternQueryGraph(root_node)
+        pattern_query_graph = PatternQueryGraph(root_node, leaves)
         return pattern_query_graph
 
 
@@ -67,3 +72,7 @@ class GraphBasedProcessing(EvaluationModel):
         self.graph = self.graph_initializer.get_graph(pattern_query)
 
     def handle_event(self, event):
+        for event_node in self.graph.event_nodes:
+            if event_node.apply_conditions(event_node):
+                event_node.add_partial_result(event)
+                event_node.diffuse_result()
