@@ -40,10 +40,8 @@ class LeftDeepTreeInitializer(GraphInitializer):
                 right_child.set_parent(new_parent)
                 old_parent = new_parent
                 inner_nodes.append(new_parent)
-        else:
-            new_parent = old_parent
 
-        root_node = new_parent
+        root_node = new_parent if len(events) > 1 else old_parent
         for condition in conditions:
             if len(condition.event_indices) == 1:
                 leaves[condition.event_indices[0]].add_condition(condition)
@@ -73,6 +71,4 @@ class GraphBasedProcessing(EvaluationModel):
 
     def handle_event(self, event):
         for event_node in self.graph.event_nodes:
-            if event_node.apply_conditions(event_node):
-                event_node.add_partial_result(event)
-                event_node.diffuse_result()
+            event_node.try_add_partial_result(event)

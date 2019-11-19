@@ -1,6 +1,11 @@
 from typing import List, Callable, Union
 from enum import Enum
 from Processor import Event
+from PatternQueryGraph import PartialResult
+
+
+_time_limit = None
+
 
 class Operator(Enum):
     SEQ = 1
@@ -37,18 +42,20 @@ class Condition:
         self.condition_apply_function = condition_apply_function
         self.event_indices = event_indices
 
-    def check_condition(self, events: Union[List: Event, Event]) -> bool:
+    def check_condition(self, events: Union[Event, PartialResult]) -> bool:
         """
         :param events: the list of relevant events in the order they need to be called in the condition_apply_function
         :return: true if the condition holds for the relevant events
         """
         if type(events) == Event:
             return self.condition_apply_function(events)
-        return self.condition_apply_function(*events)
+        relevant_events = [events[i] for i in self.event_indices]
+        return self.condition_apply_function(*relevant_events)
 
 
 class PatternQuery:
     def __init__(self, event_pattern: EventPattern, conditions: List[Condition], time_limit):
         self.event_pattern = event_pattern
         self.conditions = conditions
-        self.time_limit = time_limit
+        global _time_limit
+        _time_limit = time_limit
