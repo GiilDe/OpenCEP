@@ -46,10 +46,7 @@ class Node:
     def _check_conditions(self, partial_result: Union[PartialResult, Event]) -> bool:
         if partial_result.end_time - partial_result.start_time > _time_limit:
             return False
-        for condition in self.conditions:
-            if not condition.check_condition(partial_result):
-                return False
-        return True
+        return all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def get_results(self):
         return self.partial_results_buffer
@@ -79,6 +76,8 @@ class ConditionNode(Node):
         results_from_relevant_children = [child.get_results if child != diffuser_child else [partial_result]
                                           for child in self.children]
         for partial_results in product(*results_from_relevant_children):
+            if not self.operator.check_operator(partial_results):
+                continue
             new_result = PartialResult.init_with_partial_results(partial_results)
             if self._check_conditions(new_result):
                 self.partial_results_buffer.append(new_result)

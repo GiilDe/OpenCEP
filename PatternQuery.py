@@ -1,5 +1,4 @@
-from typing import List, Callable, Union
-from enum import Enum
+from typing import List, Callable, Union, Tuple
 from Processor import Event
 from PatternQueryGraph import PartialResult
 
@@ -7,9 +6,21 @@ from PatternQueryGraph import PartialResult
 _time_limit = None
 
 
-class Operator(Enum):
-    SEQ = 1
-    AND = 2
+class Operator:
+    def check_operator(self, partial_results: Tuple[PartialResult]) -> bool:
+        pass
+
+
+class Seq:
+    @staticmethod
+    def check_operator(partial_results: Tuple[PartialResult]) -> bool:
+        return all(partial_results[i].end_time < partial_results[i+1].start_time for i in range(len(partial_results)-1))
+
+
+class And:
+    @staticmethod
+    def check_operator(partial_results: Tuple[PartialResult]) -> bool:
+        return True
 
 
 class EventPattern:
@@ -17,7 +28,7 @@ class EventPattern:
     This class represents an operator application on some event types.
     for example if A, B, C are event types than this class might represent SEQ(A, B, C)
     the elements in event_types can be event types or OperatorApplication so we can represent recursive operator
-    application (such as SEQ(A, B, AND(C, D)))
+    application (such as SEQ(A, B, AND(C, D))). Note that the order of event in operands for a Seq operator is important
     """
     def __init__(self, operands: List, operator: Operator):
         """
