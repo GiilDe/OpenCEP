@@ -1,46 +1,19 @@
-from PatternQuery import PatternQuery
+import ProcessingUtilities
 from typing import List
+from file_sort import sort_file
+import copy
 
-
-class EvaluationModel:
-    def handle_event(self, event):
-        pass
-
-    def set_pattern_query(self, pattern_query: PatternQuery):
-        pass
-
-    def get_results(self) -> List:
-        pass
-
-
-class Event:
-    def __init__(self, attribute_names: List[str], values: List, time_name: str):
-        self.attributes = dict(zip(attribute_names, values))
-        self.time_name = time_name
-
-    def __getattribute__(self, item):
-        return self.attributes[item]
-
-    def get_time(self):
-        return self[self.time_name]
+metastock7_attributes, metastock7_time_index = ['symbol', 'date', 'open of the day', 'high of the day',
+                                               'low of the day', 'close of the day', 'volumes'], 1
 
 
 class Processor:
     """
     This class represents the main complex event processor
     """
-    def __init__(self, data_file_path: str, attribute_names: List[str]):
-        self.data_file_path = data_file_path
-        self.attribute_names = attribute_names
+    sorted_prefix = 'sorted_'
 
-    def query(self, pattern_query: PatternQuery, evaluation_model: EvaluationModel, time_name: str) -> List:
-        """
-        Method to handle
-        :param pattern_query:
-        :param evaluation_model:
-        :param time_name:
-        :return:
-        """
+    def get_event_from_line(self, line):
         def convert_value(value: str):
             def isfloat(val: str):
                 try:
@@ -48,23 +21,45 @@ class Processor:
                     return True
                 except ValueError:
                     return False
-
             if str.isdigit(value):
                 return int(value)
             if isfloat(value):
                 return float(value)
             return value
 
+        values = line[:-1].split(',')
+        for i, value in enumerate(values):
+            values[i] = convert_value(value)
+        new_event = ProcessingUtilities.Event(self.attribute_names, values, self.time_name)
+        return new_event
+
+    def __init__(self, data_file_path: str, attribute_names: List[str], time_attribute_index: int, sorted_by_time=True):
+        self.data_file_path = data_file_path
+        self.attribute_names = attribute_names
+        self.time_name = attribute_names[time_attribute_index]
+        if not sorted_by_time:
+            self.data_file_path = Processor.sorted_prefix + self.data_file_path
+            sort_file(time_attribute_index, data_file_path, self.data_file_path)
+
+    def query(self, pattern_query: ProcessingUtilities.PatternQuery,
+              evaluation_model: ProcessingUtilities.EvaluationModel, output_file=None):
+        """
+        Method to handle
+        :param pattern_query:
+        :param evaluation_model:
+        :return:
+        """
         evaluation_model.set_pattern_query(pattern_query)
         data_stream = open(self.data_file_path, 'r')
-        next_line = data_stream.readline()
-        while next_line:
-            values = next_line.split(',')
-            for i, value in enumerate(values):
-                values[i] = convert_value(value)
-            new_event = Event(self.attribute_names, values, time_name)
-            evaluation_model.handle_event(new_event)
-            next_line = data_stream.readline()
-
+        for line in data_stream:
+            event = self.get_event_from_line(line)
+            evaluation_model.handle_event(event)
         data_stream.close()
-        return evaluation_model.get_results()
+        results = evaluation_model.get_results()
+        if output_file is None:
+            return results
+        else:
+            output = open(output_file, 'w')
+            for result in results:
+                output.write(str(result))
+            output.close()
