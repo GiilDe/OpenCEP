@@ -24,3 +24,8 @@ if __name__ == "__main__":
     pattern_query = ProcessingUtilities.PatternQuery(ProcessingUtilities.EventPattern(4, ProcessingUtilities.And()),
                                                      event_types_conditions, 35)
     processor.query(pattern_query, graph_based_processor, "and_test_results.txt")
+    # Naive stricly monotone seq test
+    pattern_query = ProcessingUtilities.PatternQuery(ProcessingUtilities.EventPattern(4,
+                                                     ProcessingUtilities.StriclyMonotoneSeq()), event_types_conditions,
+                                                     35)
+    processor.query(pattern_query, graph_based_processor, "stricly_monotone_seq_test_results.txt")
