@@ -1,6 +1,6 @@
 import Processor
 import ProcessingUtilities
-import GraphBasedProcessingUtilities
+from GraphBasedProcessing import GraphBasedProcessingUtilities
 
 stock_types = ['AAME', 'AAON', 'MCRS', 'ZHNE']
 a_type = lambda event: event.symbol == 'AAME'
@@ -19,13 +19,13 @@ if __name__ == "__main__":
                                                      event_types_conditions, 35)
     left_deep_initializer = GraphBasedProcessingUtilities.LeftDeepTreeInitializer()
     graph_based_processor = GraphBasedProcessingUtilities.GraphBasedProcessing(left_deep_initializer)
-    processor.query(pattern_query, graph_based_processor, "seq_test_results.txt")
+    processor.query(pattern_query, graph_based_processor, "../seq_test_results.txt")
     # Naive and test
     pattern_query = ProcessingUtilities.PatternQuery(ProcessingUtilities.EventPattern(4, ProcessingUtilities.And()),
                                                      event_types_conditions, 35)
-    processor.query(pattern_query, graph_based_processor, "and_test_results.txt")
+    processor.query(pattern_query, graph_based_processor, "../and_test_results.txt")
     # Naive stricly monotone seq test
     pattern_query = ProcessingUtilities.PatternQuery(ProcessingUtilities.EventPattern(4,
                                                      ProcessingUtilities.StriclyMonotoneSeq()), event_types_conditions,
                                                      35)
-    processor.query(pattern_query, graph_based_processor, "stricly_monotone_seq_test_results.txt")
+    processor.query(pattern_query, graph_based_processor, "../stricly_monotone_seq_test_results.txt")

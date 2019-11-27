@@ -1,5 +1,5 @@
 import ProcessingUtilities
-import PatternQueryGraph
+from GraphBasedProcessing import PatternQueryGraph
 from typing import List
 
 
