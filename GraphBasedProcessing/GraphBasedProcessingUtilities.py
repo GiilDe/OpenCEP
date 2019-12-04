@@ -20,14 +20,14 @@ class LeftDeepTreeInitializer(GraphInitializer):
         :return: PatternQueryGraph.PatternQueryGraph that is a left deep tree representing the pattern query
         """
         operator = pattern_query.event_pattern.operator
-        events_num = pattern_query.event_pattern.operands_quantity
+        events_num = len(pattern_query.event_pattern.event_types_or_patterns)
         conditions = pattern_query.conditions
         inner_nodes = []
-        old_parent = PatternQueryGraph.EventNode()
+        old_parent = PatternQueryGraph.EventNode(pattern_query.event_pattern.event_types_or_patterns[0])
         leaves = [old_parent]
         if events_num > 1:
-            for event in range(1, events_num):
-                right_child = PatternQueryGraph.EventNode()
+            for i in range(1, events_num):
+                right_child = PatternQueryGraph.EventNode(pattern_query.event_pattern.event_types_or_patterns[i])
                 leaves.append(right_child)
                 new_parent = PatternQueryGraph.ConditionNode([old_parent, right_child], operator)
                 old_parent.set_parent(new_parent)

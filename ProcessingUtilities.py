@@ -5,10 +5,10 @@ _time_limit = None
 
 
 class Event:
-    def __init__(self, attribute_names: List[str], values: List, time_name: str, event_type):
+    def __init__(self, attribute_names: List[str], values: List, time_name, type_name):
         self.attributes = dict(zip(attribute_names, values))
         self.time_name = time_name
-        self.event_type = event_type
+        self.type_name = type_name
 
     def __getattr__(self, item):
         """
@@ -21,6 +21,9 @@ class Event:
     def get_time(self):
         return self.attributes[self.time_name]
 
+    def get_type(self):
+        return self.attributes[self.type_name]
+
     def __str__(self):
         join = ','.join(str(value) for value in self.attributes.values())
         return join + "\n"
@@ -29,17 +32,17 @@ class Event:
 class EventPattern:
     """
     This class represents an operator application on some event types.
-    for example if A, B, C are event types than this class might represent SEQ(A, B, C)
-    the elements in event_types can be event types or OperatorApplication so we can represent recursive operator
+    for example if A, B, C are event types that this class might represent SEQ(A, B, C)
+    the elements in event_types can be event types or EventPattern so we can represent recursive operator
     application (such as SEQ(A, B, AND(C, D))). Note that the order of event in operands for a Seq operator is important
     """
-    def __init__(self, event_types: List, operator):
+    def __init__(self, event_types_or_patterns: List, operator):
         """
-        :param operands_quantity:
+        :param event_types_or_patterns:
         :param operator:
         """
         self.operator = operator
-        self.event_types = event_types
+        self.event_types_or_patterns = event_types_or_patterns
 
 
 class PartialResult:

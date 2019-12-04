@@ -26,13 +26,15 @@ class Processor:
         values = line[:-1].split(',')
         for i, value in enumerate(values):
             values[i] = convert_value(value)
-        new_event = ProcessingUtilities.Event(self.attribute_names, values, self.time_name)
+        new_event = ProcessingUtilities.Event(self.attribute_names, values, self.time_name, self.type_name)
         return new_event
 
-    def __init__(self, data_file_path: str, attribute_names: List[str], time_attribute_index: int, sorted_by_time=True):
+    def __init__(self, data_file_path: str, attribute_names: List[str], time_attribute_index: int,
+                 type_attribute_index: int, sorted_by_time=True):
         self.data_file_path = data_file_path
         self.attribute_names = attribute_names
         self.time_name = attribute_names[time_attribute_index]
+        self.type_name = attribute_names[type_attribute_index]
         if not sorted_by_time:
             self.data_file_path = Processor.sorted_prefix + self.data_file_path
             sort_file(time_attribute_index, data_file_path, self.data_file_path)

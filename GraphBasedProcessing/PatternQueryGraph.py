@@ -69,8 +69,9 @@ class EventNode(Node):
     """
     represents a leaf node in the graph that holds events
     """
-    def __init__(self, parent: ConditionNode = None, conditions: List[ProcessingUtilities.Condition] = None):
+    def __init__(self, event_type, parent: ConditionNode = None, conditions: List[ProcessingUtilities.Condition] = None):
         super().__init__(conditions, parent)
+        self.event_type = event_type
 
     def try_add_partial_result(self, event: ProcessingUtilities.Event):
         """
@@ -78,10 +79,11 @@ class EventNode(Node):
         :param event: an event corresponding to this leaf node
         :return: self
         """
-        partial_result = ProcessingUtilities.PartialResult(event)
-        if self._check_conditions(partial_result):
-            self.partial_results_buffer.append(partial_result)
-            self.parent.try_add_partial_result(partial_result, self)
+        if self.event_type == event.get_type():
+            partial_result = ProcessingUtilities.PartialResult(event)
+            if self._check_conditions(partial_result):
+                self.partial_results_buffer.append(partial_result)
+                self.parent.try_add_partial_result(partial_result, self)
         return self
 
 
