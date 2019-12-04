@@ -5,9 +5,10 @@ _time_limit = None
 
 
 class Event:
-    def __init__(self, attribute_names: List[str], values: List, time_name: str):
+    def __init__(self, attribute_names: List[str], values: List, time_name: str, event_type):
         self.attributes = dict(zip(attribute_names, values))
         self.time_name = time_name
+        self.event_type = event_type
 
     def __getattr__(self, item):
         """
@@ -32,13 +33,13 @@ class EventPattern:
     the elements in event_types can be event types or OperatorApplication so we can represent recursive operator
     application (such as SEQ(A, B, AND(C, D))). Note that the order of event in operands for a Seq operator is important
     """
-    def __init__(self, operands_quantity: int, operator):
+    def __init__(self, event_types: List, operator):
         """
         :param operands_quantity:
         :param operator:
         """
         self.operator = operator
-        self.operands_quantity = operands_quantity
+        self.event_types = event_types
 
 
 class PartialResult:
@@ -97,6 +98,18 @@ class Condition:
 
 
 class PatternQuery:
+    """
+    This is an abstract class representing a possible input for a possible interface. In order to create new ways of
+    input to the system override this class with new class and override Interface class with a new class that can
+    process the new PatternQuery class
+    """
+
+
+class CleanPatternQuery(PatternQuery):
+    """
+    A class representing a "clean" pattern query meaning the pattern query input after being processed by the
+    interface class (the inner algorithms only know this class).
+    """
     def __init__(self, event_pattern: EventPattern, conditions: List[Condition], time_limit):
         self.event_pattern = event_pattern
         self.conditions = conditions
@@ -104,11 +117,19 @@ class PatternQuery:
         _time_limit = time_limit
 
 
+class StringPatternQuery(PatternQuery):
+    """
+    This class represents a pattern query, its input is a string in the following form:
+    WHERE
+    """
+    # def __init__(self, pattern_query: str):
+
+
 class EvaluationModel:
     def handle_event(self, event):
         pass
 
-    def set_pattern_query(self, pattern_query: PatternQuery):
+    def set_pattern_query(self, pattern_query: CleanPatternQuery):
         pass
 
     def get_results(self) -> List:
@@ -133,3 +154,52 @@ class StriclyMonotoneSeq(Operator):
 class And(Operator):
     def check_operator(self, partial_results: Tuple[PartialResult]) -> bool:
         return True
+
+
+class InputInterface:
+    """
+    This is an abstract class to generalize the possible ways of processing various types of PatterQuery
+    """
+    def get_clean_pattern_query(self, pattern_query: PatternQuery) -> CleanPatternQuery:
+        pass
+
+
+class TrivialInputInterface(InputInterface):
+    """
+    This interface does nothing as it already receives a CleanPatternQuery
+    """
+    def get_clean_pattern_query(self, pattern_query: CleanPatternQuery) -> CleanPatternQuery:
+        return pattern_query
+
+
+class StringInputInterface(InputInterface):
+    """
+    This interface gets a StringPatternQuery.
+    """
+
+
+class OutputInterface:
+    """
+    This is an abstract class to generalize the various ways of outputing the results to the user
+    """
+    def output_results(self, results: List[PartialResult]):
+        pass
+
+
+class TrivialOutputInterface(OutputInterface):
+    def output_results(self, results: List[PartialResult]):
+        return results
+
+
+class FileOutputInterface(OutputInterface):
+    def __init__(self, output_file: str):
+        self.output_file = output_file
+
+    def output_results(self, results: List[PartialResult]):
+        output = open(self.output_file, 'w')
+        for result in results:
+            output.write(str(result))
+        output.close()
+        return results
+
+

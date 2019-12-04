@@ -4,7 +4,7 @@ from typing import List
 
 
 class GraphInitializer:
-    def get_graph(self, pattern_query: ProcessingUtilities.PatternQuery) -> PatternQueryGraph.PatternQueryGraph:
+    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
         pass
 
 
@@ -13,7 +13,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
     This class receives a PatternQuery and generates a trivial left deep tree representing the pattern query.
     This class cannot implement operator nesting.
     """
-    def get_graph(self, pattern_query: ProcessingUtilities.PatternQuery) -> PatternQueryGraph.PatternQueryGraph:
+    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
         """
         assumes no operator nesting
         :param pattern_query:
@@ -60,7 +60,7 @@ class GraphBasedProcessing(ProcessingUtilities.EvaluationModel):
         """
         self.graph_initializer = graph_initializer
 
-    def set_pattern_query(self, pattern_query: ProcessingUtilities.PatternQuery):
+    def set_pattern_query(self, pattern_query: ProcessingUtilities.CleanPatternQuery):
         self.graph = self.graph_initializer.get_graph(pattern_query)
 
     def handle_event(self, event):

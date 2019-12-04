@@ -3,10 +3,6 @@ from typing import List
 from file_sort import sort_file
 
 
-metastock7_attributes, metastock7_time_index = ['symbol', 'date', 'open of the day', 'high of the day',
-                                               'low of the day', 'close of the day', 'volumes'], 1
-
-
 class Processor:
     """
     This class represents the main complex event processor
@@ -42,24 +38,21 @@ class Processor:
             sort_file(time_attribute_index, data_file_path, self.data_file_path)
 
     def query(self, pattern_query: ProcessingUtilities.PatternQuery,
-              evaluation_model: ProcessingUtilities.EvaluationModel, output_file=None):
+              evaluation_model: ProcessingUtilities.EvaluationModel,
+              input_interface: ProcessingUtilities.InputInterface = ProcessingUtilities.TrivialInputInterface(),
+              output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()):
         """
         Method to handle
         :param pattern_query:
         :param evaluation_model:
         :return:
         """
-        evaluation_model.set_pattern_query(pattern_query)
+        clean_pattern_query = input_interface.get_clean_pattern_query(pattern_query)
+        evaluation_model.set_pattern_query(clean_pattern_query)
         data_stream = open(self.data_file_path, 'r')
         for line in data_stream:
             event = self.get_event_from_line(line)
             evaluation_model.handle_event(event)
         data_stream.close()
         results = evaluation_model.get_results()
-        if output_file is None:
-            return results
-        else:
-            output = open(output_file, 'w')
-            for result in results:
-                output.write(str(result))
-            output.close()
+        return output_interface.output_results(results)
