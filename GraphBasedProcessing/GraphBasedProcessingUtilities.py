@@ -19,21 +19,42 @@ class LeftDeepTreeInitializer(GraphInitializer):
         :param pattern_query:
         :return: PatternQueryGraph.PatternQueryGraph that is a left deep tree representing the pattern query
         """
+
+        def get_params_to_operator_construction():
+            """
+            this function is responsible to output to the operator builder the correct params that he need according to
+            its type
+            :param i:
+            :param operator_type:
+            :return:
+            """
+            if operator_type == ProcessingUtilities.Seq:
+                return [initial_condition_node_identifier + 1, i]
+
         operator = pattern_query.event_pattern.operator
-        events_num = len(pattern_query.event_pattern.event_types_or_patterns)
+        operator_type = type(operator)
+        event_dict = {event_and_identifier.identifier: event_and_identifier
+                      for event_and_identifier in pattern_query.event_pattern.event_types_or_patterns}
+        events = pattern_query.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
+            else ProcessingUtilities.Operator.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
+        initial_condition_node_identifier = -1
+        events_num = len(events)
         conditions = pattern_query.conditions
         inner_nodes = []
-        old_parent = PatternQueryGraph.EventNode(pattern_query.event_pattern.event_types_or_patterns[0])
+        old_parent = PatternQueryGraph.EventNode(events[0])
         leaves = [old_parent]
         if events_num > 1:
             for i in range(1, events_num):
-                right_child = PatternQueryGraph.EventNode(pattern_query.event_pattern.event_types_or_patterns[i])
+                right_child = PatternQueryGraph.EventNode(events[i])
                 leaves.append(right_child)
-                new_parent = PatternQueryGraph.ConditionNode([old_parent, right_child], operator)
+                new_parent = PatternQueryGraph.ConditionNode([old_parent, right_child],
+                                                             operator_type(get_params_to_operator_construction()),
+                                                             initial_condition_node_identifier)
                 old_parent.set_parent(new_parent)
                 right_child.set_parent(new_parent)
                 old_parent = new_parent
                 inner_nodes.append(new_parent)
+                initial_condition_node_identifier -= 1
 
         root_node = new_parent if events_num > 1 else old_parent
         for condition in conditions:

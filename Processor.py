@@ -22,7 +22,6 @@ class Processor:
             if isfloat(value):
                 return float(value)
             return value
-
         values = line[:-1].split(',')
         for i, value in enumerate(values):
             values[i] = convert_value(value)

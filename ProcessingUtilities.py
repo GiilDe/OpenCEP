@@ -1,6 +1,7 @@
-from typing import List, Tuple, Callable, Union
+from typing import List, Tuple, Callable, Union, Dict
 from itertools import chain
-
+from itertools import product
+from collections import OrderedDict
 _time_limit = None
 
 
@@ -16,6 +17,8 @@ class Event:
         :param item: attriute name to return
         :return:
         """
+        if item == 'start_time' or item == 'end_time':
+            return self.get_time()
         return self.attributes[item]
 
     def get_time(self):
@@ -24,9 +27,19 @@ class Event:
     def get_type(self):
         return self.attributes[self.type_name]
 
+    @staticmethod
+    def same_events(event1, event2) -> bool:
+        return True if event1.attributes.cmp(event2.attributes) == 0 else False
+
     def __str__(self):
         join = ','.join(str(value) for value in self.attributes.values())
         return join + "\n"
+
+
+class EventTypeOrPatternAndIdentifier:
+    def __init__(self, event_type_or_pattern, identifier):
+        self.event_type_or_pattern = event_type_or_pattern
+        self.identifier = identifier
 
 
 class EventPattern:
@@ -38,7 +51,7 @@ class EventPattern:
     """
     def __init__(self, event_types_or_patterns: List, operator):
         """
-        :param event_types_or_patterns:
+        :param event_types_or_patterns: List[Union[TypeEventAndIdentifier, EventPattern]]
         :param operator:
         """
         self.operator = operator
@@ -46,47 +59,62 @@ class EventPattern:
 
 
 class PartialResult:
-    """
-    just a possible implementation, not finished
-    """
-    def __init__(self, events: Union[List[Event], Event]):
-        self.events = [events] if type(events) == Event else events
-        self.start_time = min(self.events, key=lambda event: event.get_time()).get_time()
-        self.end_time = max(self.events, key=lambda event: event.get_time()).get_time()
+    def __init__(self, identifier_to_partial_result: Dict, operator_type_of_node=None, identifier=None):
+        self.identifier_to_partial_result = identifier_to_partial_result
+        self.operator_type_of_node = operator_type_of_node
+        self.identifier = identifier
+        self.start_time = min(self.identifier_to_partial_result.values(),
+                                  key=lambda partial_result_or_event: partial_result_or_event.start_time).start_time
+        self.end_time = max(self.identifier_to_partial_result.values(),
+                                key=lambda partial_result_or_event: partial_result_or_event.end_time).end_time
 
-    def __getitem__(self, i):
-        return self.events[i]
-
-    def __iter__(self):
-        return self.events
+    def is_event_wrapper(self) -> bool:
+        return len(self.identifier_to_partial_result) == 1
 
     @staticmethod
-    def init_with_partial_results(partial_results):
-        new_events_lists = [partial_result.events for partial_result in partial_results]
-        new_events = list(chain(*new_events_lists))
-        return PartialResult(new_events)
+    def init_with_partial_results(partial_results, operator_type_of_node=None, identifier=None):
+        identifier_to_partial_result = {}
+        for partial_result in partial_results:
+            if partial_result.operator_type_of_node is None and not partial_result.is_event_wrapper:
+                identifier_to_partial_result.update(partial_result.identifier_to_partial_result)
+            else:
+                identifier_to_partial_result.update({partial_result.identifier: partial_result})
 
-    def __str__(self):
-        s = " ###result### \n"
-        for event in self.events:
-            s += str(event)
-        s += " ### "
-        return s
+        return PartialResult(identifier_to_partial_result, operator_type_of_node, identifier)
+
+
+    def unpack(self):
+        if self.is_event_wrapper():
+            return {self.identifier: self}
+        if self.operator_type_of_node is not None:
+            return {self.identifier: self}
+        result = dict()
+        for partial_result in self.identifier_to_partial_result.values():
+            result.update(partial_result.unpack())
+        return result
+
+    def completely_unpack(self) -> Dict:
+        if self.is_event_wrapper():
+            return self.identifier_to_partial_result
+        result = dict()
+        for partial_result in self.identifier_to_partial_result.values():
+            result.update(partial_result.completely_unpack())
+        return result
 
 
 class Condition:
     """
     this class represents a predicate (for example for events A, B: A.x > B.x)
     """
-    def __init__(self, condition_apply_function: Callable, event_indices: List[int]):
+    def __init__(self, condition_apply_function: Callable, event_identifiers: List):
         """
         :param condition_apply_function: a boolean function that gets the relevant event and applies the condition
-        :param event_indices: the indices of the events in the PatternQuery event_types list
+        :param event_identifiers: the identifiers of the events in the PatternQuery event_types list
             to be checked by this condition. Note that event_indices needs to be ordered in the order arguments should
             be passed to the condition_apply_function!
         """
         self.condition_apply_function = condition_apply_function
-        self.event_indices = event_indices
+        self.event_identifiers = event_identifiers
 
     def check_condition(self, partial_result: PartialResult) -> bool:
         """
@@ -94,9 +122,8 @@ class Condition:
         need to be called in the condition_apply_function
         :return: true if the condition holds for the relevant events
         """
-        if len(partial_result.events) == 1:
-            return self.condition_apply_function(partial_result.events[0])
-        relevant_events = [partial_result.events[i] for i in self.event_indices]
+        events = partial_result.completely_unpack()
+        relevant_events = [events[identifier] for identifier in self.event_identifiers]
         return self.condition_apply_function(*relevant_events)
 
 
@@ -106,6 +133,7 @@ class PatternQuery:
     input to the system override this class with new class and override Interface class with a new class that can
     process the new PatternQuery class
     """
+    pass
 
 
 class CleanPatternQuery(PatternQuery):
@@ -140,23 +168,70 @@ class EvaluationModel:
 
 
 class Operator:
-    def check_operator(self, partial_results: Tuple[PartialResult]) -> bool:
+    def get_new_results(self, children_buffers: List[List[PartialResult]], new_result: PartialResult, identifier) \
+            -> List[PartialResult]:
         pass
+
+    @staticmethod
+    def get_all_possible_combinations(children_buffers: List[List[PartialResult]], new_result: PartialResult):
+        children_buffers.append([new_result])
+        return product(*children_buffers)
+
+    @staticmethod
+    def get_events_from_partial_results(partial_results):
+        result = {}
+        for partial_result in partial_results:
+            result.update(partial_result.unpack())
+        return result
+
+    @staticmethod
+    def get_sorted_by_identifier_order(partial_results_dict, identifiers_order):
+        events_ordered = []
+        for identifier in identifiers_order:
+            events_ordered.append(partial_results_dict[identifier])
+        return events_ordered
+
+    @staticmethod
+    def contains_same_event_multiple_times(partial_results) -> bool:
+        s = set()
+        for partial_result in partial_results:
+            events = partial_result.completely_unpack()
+            for event in events.values():
+                value_representation = tuple(event.attributes.values())
+                if value_representation in s:
+                    return True
+                s.add(value_representation)
+        return False
 
 
 class Seq(Operator):
-    def check_operator(self, partial_results: Tuple[PartialResult]) -> bool:
-        return all(partial_results[i].end_time <= partial_results[i+1].start_time for i in range(len(partial_results)-1))
+    def __init__(self, identifiers_order):
+        """
+        :param identifiers_order: an iterable defining the order of the identifiers in the seq
+        """
+        self.identifiers_order = identifiers_order
 
-
-class StriclyMonotoneSeq(Operator):
-    def check_operator(self, partial_results: Tuple[PartialResult]) -> bool:
-        return all(partial_results[i].end_time < partial_results[i+1].start_time for i in range(len(partial_results)-1))
+    def get_new_results(self, children_buffers: List[List[PartialResult]], new_result: PartialResult, identifier) \
+            -> List[PartialResult]:
+        result = []
+        for partial_results in self.get_all_possible_combinations(children_buffers, new_result):
+            partial_results_dict = self.get_events_from_partial_results(partial_results)
+            if not self.contains_same_event_multiple_times(partial_results_dict.values()):
+                partial_results_ordered = self.get_sorted_by_identifier_order(partial_results_dict, self.identifiers_order)
+                if all(partial_results_ordered[i].end_time <= partial_results_ordered[i+1].start_time for i in range(len(partial_results_ordered)-1)):
+                    result.append(PartialResult.init_with_partial_results(partial_results, Seq, identifier))
+        return result
 
 
 class And(Operator):
-    def check_operator(self, partial_results: Tuple[PartialResult]) -> bool:
-        return True
+    def __init__(self, *args):
+        pass
+
+    def get_new_results(self, children_buffers: List[List[PartialResult]], new_result: PartialResult, identifier) \
+            -> List[PartialResult]:
+        return [PartialResult.init_with_partial_results(partial_results, And, identifier) for partial_results in
+                self.get_all_possible_combinations(children_buffers, new_result)
+                if not self.contains_same_event_multiple_times(self.get_events_from_partial_results(partial_results).values())]
 
 
 class InputInterface:
@@ -185,12 +260,12 @@ class OutputInterface:
     """
     This is an abstract class to generalize the various ways of outputing the results to the user
     """
-    def output_results(self, results: List[PartialResult]):
+    def output_results(self, results):
         pass
 
 
 class TrivialOutputInterface(OutputInterface):
-    def output_results(self, results: List[PartialResult]):
+    def output_results(self, results):
         return results
 
 
@@ -198,10 +273,17 @@ class FileOutputInterface(OutputInterface):
     def __init__(self, output_file: str):
         self.output_file = output_file
 
-    def output_results(self, results: List[PartialResult]):
+    def output_results(self, results):
+        def result_to_str(result: List[Event]):
+            s = " ###result### \n"
+            for event in result:
+                s += str(event)
+            s += " ### "
+            return s
+
         output = open(self.output_file, 'w')
         for result in results:
-            output.write(str(result))
+            output.write(result_to_str(result))
         output.close()
         return results
 
