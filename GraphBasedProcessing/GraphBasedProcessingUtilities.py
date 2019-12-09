@@ -1,6 +1,6 @@
 import ProcessingUtilities
 from GraphBasedProcessing import PatternQueryGraph
-from typing import List
+import typing
 
 
 class GraphInitializer:
@@ -13,10 +13,10 @@ class LeftDeepTreeInitializer(GraphInitializer):
     This class receives a PatternQuery and generates a trivial left deep tree representing the pattern query.
     This class cannot implement operator nesting.
     """
-    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
+    def get_graph(self, pattern_queries: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
         """
         assumes no operator nesting
-        :param pattern_query:
+        :param pattern_queries:
         :return: PatternQueryGraph.PatternQueryGraph that is a left deep tree representing the pattern query
         """
 
@@ -31,15 +31,15 @@ class LeftDeepTreeInitializer(GraphInitializer):
             if operator_type == ProcessingUtilities.Seq:
                 return [initial_condition_node_identifier + 1, i]
 
-        operator = pattern_query.event_pattern.operator
+        operator = pattern_queries.event_pattern.operator
         operator_type = type(operator)
         event_dict = {event_and_identifier.identifier: event_and_identifier
-                      for event_and_identifier in pattern_query.event_pattern.event_types_or_patterns}
-        events = pattern_query.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
+                      for event_and_identifier in pattern_queries.event_pattern.event_types_or_patterns}
+        events = pattern_queries.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
             else ProcessingUtilities.Operator.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
         initial_condition_node_identifier = -1
         events_num = len(events)
-        conditions = pattern_query.conditions
+        conditions = pattern_queries.conditions
         inner_nodes = []
         old_parent = PatternQueryGraph.EventNode(events[0])
         leaves = [old_parent]
@@ -77,16 +77,17 @@ class GraphBasedProcessing(ProcessingUtilities.EvaluationModel):
     def __init__(self, graph_initializer: GraphInitializer):
         """
         :param graph_initializer: receives PatternQuery and returns a graph that represents the pattern query
-        :param pattern_query: PatternQuery
         """
         self.graph_initializer = graph_initializer
+        self.graphs = []
 
-    def set_pattern_query(self, pattern_query: ProcessingUtilities.CleanPatternQuery):
-        self.graph = self.graph_initializer.get_graph(pattern_query)
+    def set_pattern_queries(self, pattern_queries: typing.Iterable[ProcessingUtilities.CleanPatternQuery]):
+        self.graphs = [self.graph_initializer.get_graph(pattern_query) for pattern_query in pattern_queries]
 
     def handle_event(self, event):
-        for event_node in self.graph.event_nodes:
-            event_node.try_add_partial_result(event)
+        for graph in self.graphs:
+            for event_node in graph.event_nodes:
+                event_node.try_add_partial_result(event)
 
-    def get_results(self) -> List:
-        return self.graph.root_node.get_results()
+    def get_results(self) -> typing.List[typing.List]:
+        return [graph.root_node.get_results() for graph in self.graphs]

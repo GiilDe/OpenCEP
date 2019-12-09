@@ -1,4 +1,4 @@
-from typing import List, Tuple, Callable, Union, Dict
+import typing
 from itertools import chain
 from itertools import product
 from collections import OrderedDict
@@ -6,7 +6,7 @@ _time_limit = None
 
 
 class Event:
-    def __init__(self, attribute_names: List[str], values: List, time_name, type_name):
+    def __init__(self, attribute_names: typing.List[str], values: typing.List, time_name, type_name):
         self.attributes = dict(zip(attribute_names, values))
         self.time_name = time_name
         self.type_name = type_name
@@ -49,7 +49,7 @@ class EventPattern:
     the elements in event_types can be event types or EventPattern so we can represent recursive operator
     application (such as SEQ(A, B, AND(C, D))). Note that the order of event in operands for a Seq operator is important
     """
-    def __init__(self, event_types_or_patterns: List, operator):
+    def __init__(self, event_types_or_patterns: typing.List, operator):
         """
         :param event_types_or_patterns: List[Union[TypeEventAndIdentifier, EventPattern]]
         :param operator:
@@ -59,7 +59,7 @@ class EventPattern:
 
 
 class PartialResult:
-    def __init__(self, identifier_to_partial_result: Dict, operator_type_of_node=None, identifier=None):
+    def __init__(self, identifier_to_partial_result: typing.Dict, operator_type_of_node=None, identifier=None):
         self.identifier_to_partial_result = identifier_to_partial_result
         self.operator_type_of_node = operator_type_of_node
         self.identifier = identifier
@@ -82,7 +82,6 @@ class PartialResult:
 
         return PartialResult(identifier_to_partial_result, operator_type_of_node, identifier)
 
-
     def unpack(self):
         if self.is_event_wrapper():
             return {self.identifier: self}
@@ -93,7 +92,7 @@ class PartialResult:
             result.update(partial_result.unpack())
         return result
 
-    def completely_unpack(self) -> Dict:
+    def completely_unpack(self) -> typing.Dict:
         if self.is_event_wrapper():
             return self.identifier_to_partial_result
         result = dict()
@@ -106,7 +105,7 @@ class Condition:
     """
     this class represents a predicate (for example for events A, B: A.x > B.x)
     """
-    def __init__(self, condition_apply_function: Callable, event_identifiers: List):
+    def __init__(self, condition_apply_function: typing.Callable, event_identifiers: typing.List):
         """
         :param condition_apply_function: a boolean function that gets the relevant event and applies the condition
         :param event_identifiers: the identifiers of the events in the PatternQuery event_types list
@@ -141,7 +140,7 @@ class CleanPatternQuery(PatternQuery):
     A class representing a "clean" pattern query meaning the pattern query input after being processed by the
     interface class (the inner algorithms only know this class).
     """
-    def __init__(self, event_pattern: EventPattern, conditions: List[Condition], time_limit):
+    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], time_limit):
         self.event_pattern = event_pattern
         self.conditions = conditions
         global _time_limit
@@ -160,20 +159,21 @@ class EvaluationModel:
     def handle_event(self, event):
         pass
 
-    def set_pattern_query(self, pattern_query: CleanPatternQuery):
+    def set_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery]):
         pass
 
-    def get_results(self) -> List:
+    def get_results(self) -> typing.List:
         pass
 
 
 class Operator:
-    def get_new_results(self, children_buffers: List[List[PartialResult]], new_result: PartialResult, identifier) \
-            -> List[PartialResult]:
+    def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
+                        new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         pass
 
     @staticmethod
-    def get_all_possible_combinations(children_buffers: List[List[PartialResult]], new_result: PartialResult):
+    def get_all_possible_combinations(children_buffers: typing.List[typing.List[PartialResult]],
+                                      new_result: PartialResult):
         children_buffers.append([new_result])
         return product(*children_buffers)
 
@@ -211,8 +211,8 @@ class Seq(Operator):
         """
         self.identifiers_order = identifiers_order
 
-    def get_new_results(self, children_buffers: List[List[PartialResult]], new_result: PartialResult, identifier) \
-            -> List[PartialResult]:
+    def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
+                        new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         result = []
         for partial_results in self.get_all_possible_combinations(children_buffers, new_result):
             partial_results_dict = self.get_events_from_partial_results(partial_results)
@@ -227,8 +227,8 @@ class And(Operator):
     def __init__(self, *args):
         pass
 
-    def get_new_results(self, children_buffers: List[List[PartialResult]], new_result: PartialResult, identifier) \
-            -> List[PartialResult]:
+    def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
+                        new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         return [PartialResult.init_with_partial_results(partial_results, And, identifier) for partial_results in
                 self.get_all_possible_combinations(children_buffers, new_result)
                 if not self.contains_same_event_multiple_times(self.get_events_from_partial_results(partial_results).values())]
@@ -238,7 +238,8 @@ class InputInterface:
     """
     This is an abstract class to generalize the possible ways of processing various types of PatterQuery
     """
-    def get_clean_pattern_query(self, pattern_query: PatternQuery) -> CleanPatternQuery:
+    def get_clean_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery]) \
+            -> typing.Iterable[CleanPatternQuery]:
         pass
 
 
@@ -246,8 +247,9 @@ class TrivialInputInterface(InputInterface):
     """
     This interface does nothing as it already receives a CleanPatternQuery
     """
-    def get_clean_pattern_query(self, pattern_query: CleanPatternQuery) -> CleanPatternQuery:
-        return pattern_query
+    def get_clean_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery]) \
+            -> typing.Iterable[CleanPatternQuery]:
+        return pattern_queries
 
 
 class StringInputInterface(InputInterface):
@@ -270,21 +272,22 @@ class TrivialOutputInterface(OutputInterface):
 
 
 class FileOutputInterface(OutputInterface):
-    def __init__(self, output_file: str):
-        self.output_file = output_file
+    def __init__(self, output_files: typing.Iterable[str]):
+        self.output_files = output_files
 
-    def output_results(self, results):
-        def result_to_str(result: List[Event]):
+    def output_results(self, query_results):
+        def result_to_str(_result: typing.List[Event]):
             s = " ###result### \n"
-            for event in result:
+            for event in _result:
                 s += str(event)
             s += " ### "
             return s
 
-        output = open(self.output_file, 'w')
-        for result in results:
-            output.write(result_to_str(result))
-        output.close()
-        return results
+        for output_file, query_result in zip(self.output_files, query_results):
+            output = open(output_file, 'w')
+            for result in query_result:
+                output.write(result_to_str(result))
+            output.close()
+        return query_results
 
 

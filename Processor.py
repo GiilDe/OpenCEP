@@ -1,5 +1,5 @@
 import ProcessingUtilities
-from typing import List
+import typing
 from file_sort import sort_file
 
 
@@ -28,7 +28,7 @@ class Processor:
         new_event = ProcessingUtilities.Event(self.attribute_names, values, self.time_name, self.type_name)
         return new_event
 
-    def __init__(self, data_file_path: str, attribute_names: List[str], time_attribute_index: int,
+    def __init__(self, data_file_path: str, attribute_names: typing.List[str], time_attribute_index: int,
                  type_attribute_index: int, sorted_by_time=True):
         self.data_file_path = data_file_path
         self.attribute_names = attribute_names
@@ -38,18 +38,20 @@ class Processor:
             self.data_file_path = Processor.sorted_prefix + self.data_file_path
             sort_file(time_attribute_index, data_file_path, self.data_file_path)
 
-    def query(self, pattern_query: ProcessingUtilities.PatternQuery,
+    def query(self, pattern_queries: typing.List[ProcessingUtilities.CleanPatternQuery],
               evaluation_model: ProcessingUtilities.EvaluationModel,
               input_interface: ProcessingUtilities.InputInterface = ProcessingUtilities.TrivialInputInterface(),
               output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()):
         """
-        Method to handle
-        :param pattern_query:
+
+        :param pattern_queries:
         :param evaluation_model:
+        :param input_interface:
+        :param output_interface:
         :return:
         """
-        clean_pattern_query = input_interface.get_clean_pattern_query(pattern_query)
-        evaluation_model.set_pattern_query(clean_pattern_query)
+        clean_pattern_queries = input_interface.get_clean_pattern_queries(pattern_queries)
+        evaluation_model.set_pattern_queries(clean_pattern_queries)
         data_stream = open(self.data_file_path, 'r')
         for line in data_stream:
             event = self.get_event_from_line(line)
