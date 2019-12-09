@@ -68,10 +68,10 @@ class LeftDeepTreeInitializer(GraphInitializer):
         return pattern_query_graph
 
 
-class GraphBasedProcessing(ProcessingUtilities.EvaluationModel):
+class NaiveMultipleTreesGraphBasedProcessing(ProcessingUtilities.EvaluationModel):
     """
-    This class receives a graph that represents the pattern the user is looking for.
-    It iterates the events one by one and tries to build the graph that it received.
+    This class receives initializes a graph for each input query.
+    It iterates the events one by one and tries to build each graph that it received.
     It saves its partial graphs explicitly in memory.
     """
     def __init__(self, graph_initializer: GraphInitializer):

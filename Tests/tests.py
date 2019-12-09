@@ -23,7 +23,7 @@ if __name__ == "__main__":
     and_pattern_query = ProcessingUtilities.CleanPatternQuery(and_event_pattern, [], 16)
     pattern_queries = [seq_pattern_query, and_pattern_query]
     left_deep_initializer = GraphBasedProcessingUtilities.LeftDeepTreeInitializer()
-    left_deep_tree_processor = GraphBasedProcessingUtilities.GraphBasedProcessing(left_deep_initializer)
+    left_deep_tree_processor = GraphBasedProcessingUtilities.NaiveMultipleTreesGraphBasedProcessing(left_deep_initializer)
     processor.query(pattern_queries, left_deep_tree_processor, ProcessingUtilities.TrivialInputInterface(),
                     ProcessingUtilities.FileOutputInterface(["seq_test_results.txt", "and_test_results.txt"]))
 
