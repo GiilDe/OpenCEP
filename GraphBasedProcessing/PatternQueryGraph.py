@@ -21,7 +21,7 @@ class Node:
 
     def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
             -> bool:
-        if partial_result.end_time - partial_result.start_time > ProcessingUtilities._time_limit:
+        if partial_result.end_time - partial_result.start_time > ProcessingUtilities.time_limit:
             return False
         return all(condition.check_condition(partial_result) for condition in self.conditions)
 

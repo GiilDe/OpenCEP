@@ -2,7 +2,7 @@ import typing
 from itertools import chain
 from itertools import product
 from collections import OrderedDict
-_time_limit = None
+time_limit = None
 
 
 class Event:
@@ -140,11 +140,11 @@ class CleanPatternQuery(PatternQuery):
     A class representing a "clean" pattern query meaning the pattern query input after being processed by the
     interface class (the inner algorithms only know this class).
     """
-    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], time_limit):
+    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], _time_limit):
         self.event_pattern = event_pattern
         self.conditions = conditions
-        global _time_limit
-        _time_limit = time_limit
+        global time_limit
+        time_limit = _time_limit
 
 
 class StringPatternQuery(PatternQuery):
@@ -185,13 +185,6 @@ class Operator:
         return result
 
     @staticmethod
-    def get_sorted_by_identifier_order(partial_results_dict, identifiers_order):
-        events_ordered = []
-        for identifier in identifiers_order:
-            events_ordered.append(partial_results_dict[identifier])
-        return events_ordered
-
-    @staticmethod
     def contains_same_event_multiple_times(partial_results) -> bool:
         s = set()
         for partial_result in partial_results:
@@ -211,14 +204,23 @@ class Seq(Operator):
         """
         self.identifiers_order = identifiers_order
 
+    @staticmethod
+    def get_sorted_by_identifier_order(partial_results_dict, identifiers_order):
+        events_ordered = []
+        for identifier in identifiers_order:
+            events_ordered.append(partial_results_dict[identifier])
+        return events_ordered
+
     def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         result = []
         for partial_results in self.get_all_possible_combinations(children_buffers, new_result):
             partial_results_dict = self.get_events_from_partial_results(partial_results)
             if not self.contains_same_event_multiple_times(partial_results_dict.values()):
-                partial_results_ordered = self.get_sorted_by_identifier_order(partial_results_dict, self.identifiers_order)
-                if all(partial_results_ordered[i].end_time <= partial_results_ordered[i+1].start_time for i in range(len(partial_results_ordered)-1)):
+                partial_results_ordered = self.get_sorted_by_identifier_order(partial_results_dict,
+                                                                              self.identifiers_order)
+                if all(partial_results_ordered[i].end_time <= partial_results_ordered[i+1].start_time
+                       for i in range(len(partial_results_ordered)-1)):
                     result.append(PartialResult.init_with_partial_results(partial_results, Seq, identifier))
         return result
 
@@ -230,8 +232,8 @@ class And(Operator):
     def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         return [PartialResult.init_with_partial_results(partial_results, And, identifier) for partial_results in
-                self.get_all_possible_combinations(children_buffers, new_result)
-                if not self.contains_same_event_multiple_times(self.get_events_from_partial_results(partial_results).values())]
+                self.get_all_possible_combinations(children_buffers, new_result) if not
+                self.contains_same_event_multiple_times(self.get_events_from_partial_results(partial_results).values())]
 
 
 class InputInterface:

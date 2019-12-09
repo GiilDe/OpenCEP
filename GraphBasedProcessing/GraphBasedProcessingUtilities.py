@@ -36,7 +36,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
         event_dict = {event_and_identifier.identifier: event_and_identifier
                       for event_and_identifier in pattern_queries.event_pattern.event_types_or_patterns}
         events = pattern_queries.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
-            else ProcessingUtilities.Operator.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
+            else ProcessingUtilities.Seq.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
         initial_condition_node_identifier = -1
         events_num = len(events)
         conditions = pattern_queries.conditions

@@ -16,7 +16,8 @@ if __name__ == "__main__":
     temp = stock_types_with_identifiers[2]
     stock_types_with_identifiers[2] = stock_types_with_identifiers[0]
     stock_types_with_identifiers[0] = temp
-    seq_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers, ProcessingUtilities.Seq(range(4)))
+    seq_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers,
+                                                         ProcessingUtilities.Seq(range(4)))
     seq_pattern_query = ProcessingUtilities.CleanPatternQuery(seq_event_pattern, [], 16)
     and_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers, ProcessingUtilities.And())
     and_pattern_query = ProcessingUtilities.CleanPatternQuery(and_event_pattern, [], 16)
