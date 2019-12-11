@@ -6,8 +6,8 @@ import data_formats
 stock_types = ['AAME', 'AAON', 'MCRS', 'ZHNE']
 
 
-def condition1(A, B) -> bool:
-    return A.open_of_the_day > B.open_of_the_day
+def condition1(A: ProcessingUtilities.Event, B: ProcessingUtilities.Event) -> bool:
+    return A.volumes > B.volumes
 
 
 if __name__ == "__main__":

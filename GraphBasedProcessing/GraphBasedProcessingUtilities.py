@@ -34,16 +34,15 @@ class LeftDeepTreeInitializer(GraphInitializer):
         operator_type = type(operator)
         event_dict = {event_and_identifier.identifier: event_and_identifier
                       for event_and_identifier in pattern_queries.event_pattern.event_types_or_patterns}
-        # events = pattern_queries.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
-        #     else ProcessingUtilities.Seq.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
-        events = pattern_queries.event_pattern.event_types_or_patterns
+        events = pattern_queries.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
+            else ProcessingUtilities.Seq.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
         initial_condition_node_identifier = -1
         events_num = len(events)
         conditions = pattern_queries.conditions
         inner_nodes = []
         old_parent = PatternQueryGraph.EventNode(events[0])
         leaves = [old_parent]
-        seen_events = set()
+        seen_events = {events[0].identifier}
         if events_num > 1:
             for i in range(1, events_num):
                 right_child = PatternQueryGraph.EventNode(events[i])
@@ -74,7 +73,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
 
 class NaiveMultipleTreesGraphBasedProcessing(ProcessingUtilities.EvaluationModel):
     """
-    This class receives initializes a graph for each input query.
+    This class initializes a graph for each input query.
     It iterates the events one by one and tries to build each graph that it received.
     It saves its partial graphs explicitly in memory.
     """
