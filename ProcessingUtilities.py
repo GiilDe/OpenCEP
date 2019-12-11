@@ -1,7 +1,5 @@
 import typing
-from itertools import chain
-from itertools import product
-from collections import OrderedDict
+import itertools
 time_limit = None
 
 
@@ -175,7 +173,7 @@ class Operator:
     def get_all_possible_combinations(children_buffers: typing.List[typing.List[PartialResult]],
                                       new_result: PartialResult):
         children_buffers.append([new_result])
-        return product(*children_buffers)
+        return itertools.product(*children_buffers)
 
     @staticmethod
     def get_events_from_partial_results(partial_results):
