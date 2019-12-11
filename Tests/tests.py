@@ -3,7 +3,7 @@ import ProcessingUtilities
 from GraphBasedProcessing import GraphBasedProcessingUtilities
 import data_formats
 
-stock_types = ['AAME', 'AAON', 'MCRS', 'ZHNE']
+stock_types = ['AAME', 'AAME', 'MCRS', 'ZHNE']
 
 
 def condition1(A: ProcessingUtilities.Event, B: ProcessingUtilities.Event) -> bool:

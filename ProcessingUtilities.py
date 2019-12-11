@@ -1,5 +1,6 @@
 import typing
 import itertools
+
 time_limit = None
 
 
@@ -62,9 +63,9 @@ class PartialResult:
         self.operator_type_of_node = operator_type_of_node
         self.identifier = identifier
         self.start_time = min(self.identifier_to_partial_result.values(),
-                                  key=lambda partial_result_or_event: partial_result_or_event.start_time).start_time
+                              key=lambda partial_result_or_event: partial_result_or_event.start_time).start_time
         self.end_time = max(self.identifier_to_partial_result.values(),
-                                key=lambda partial_result_or_event: partial_result_or_event.end_time).end_time
+                            key=lambda partial_result_or_event: partial_result_or_event.end_time).end_time
 
     def is_event_wrapper(self) -> bool:
         return len(self.identifier_to_partial_result) == 1
@@ -217,8 +218,8 @@ class Seq(Operator):
             if not self.contains_same_event_multiple_times(partial_results_dict.values()):
                 partial_results_ordered = self.get_sorted_by_identifier_order(partial_results_dict,
                                                                               self.identifiers_order)
-                if all(partial_results_ordered[i].end_time <= partial_results_ordered[i+1].start_time
-                       for i in range(len(partial_results_ordered)-1)):
+                if all(partial_results_ordered[i].end_time <= partial_results_ordered[i + 1].start_time
+                       for i in range(len(partial_results_ordered) - 1)):
                     result.append(PartialResult.init_with_partial_results(partial_results, Seq, identifier))
         return result
 
@@ -289,5 +290,3 @@ class FileOutputInterface(OutputInterface):
                 output.write(result_to_str(result))
             output.close()
         return query_results
-
-
