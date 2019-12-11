@@ -19,12 +19,6 @@ class Node:
     def set_parent(self, parent):
         self.parent = parent
 
-    def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
-            -> bool:
-        if partial_result.end_time - partial_result.start_time > ProcessingUtilities.time_limit:
-            return False
-        return all(condition.check_condition(partial_result) for condition in self.conditions)
-
     def _get_results(self):
         return self.partial_results_buffer
 
@@ -48,6 +42,12 @@ class ConditionNode(Node):
         self.children = children
         self.operator = operator
         self.identifier = identifier
+
+    def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
+            -> bool:
+        if partial_result.end_time - partial_result.start_time > ProcessingUtilities.time_limit:
+            return False
+        return all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def try_add_partial_result(self, partial_result: ProcessingUtilities.PartialResult, diffuser_child: Node):
         """
@@ -74,6 +74,12 @@ class EventNode(Node):
         super().__init__(conditions, parent)
         self.event_type = event_type_and_identifier.event_type_or_pattern
         self.event_identifier = event_type_and_identifier.identifier
+
+    def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
+            -> bool:
+        if partial_result.end_time - partial_result.start_time > ProcessingUtilities.time_limit:
+            return False
+        return all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def try_add_partial_result(self, event: ProcessingUtilities.Event):
         """

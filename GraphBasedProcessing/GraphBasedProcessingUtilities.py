@@ -19,7 +19,6 @@ class LeftDeepTreeInitializer(GraphInitializer):
         :param pattern_queries:
         :return: PatternQueryGraph.PatternQueryGraph that is a left deep tree representing the pattern query
         """
-
         def get_params_to_operator_construction():
             """
             this function is responsible to output to the operator builder the correct params that he need according to
@@ -28,28 +27,40 @@ class LeftDeepTreeInitializer(GraphInitializer):
             :param operator_type:
             :return:
             """
-            if operator_type == ProcessingUtilities.Seq:
+            if operator_type == ProcessingUtilities.Seq or operator_type == ProcessingUtilities.And:
                 return [initial_condition_node_identifier + 1, i]
 
         operator = pattern_queries.event_pattern.operator
         operator_type = type(operator)
         event_dict = {event_and_identifier.identifier: event_and_identifier
                       for event_and_identifier in pattern_queries.event_pattern.event_types_or_patterns}
-        events = pattern_queries.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
-            else ProcessingUtilities.Seq.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
+        # events = pattern_queries.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
+        #     else ProcessingUtilities.Seq.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
+        events = pattern_queries.event_pattern.event_types_or_patterns
         initial_condition_node_identifier = -1
         events_num = len(events)
         conditions = pattern_queries.conditions
         inner_nodes = []
         old_parent = PatternQueryGraph.EventNode(events[0])
         leaves = [old_parent]
+        seen_events = set()
         if events_num > 1:
             for i in range(1, events_num):
                 right_child = PatternQueryGraph.EventNode(events[i])
+                identifier = events[i].identifier
+                seen_events.add(identifier)
                 leaves.append(right_child)
                 new_parent = PatternQueryGraph.ConditionNode([old_parent, right_child],
                                                              operator_type(get_params_to_operator_construction()),
                                                              initial_condition_node_identifier)
+                new_conditions = []
+                for condition in conditions:
+                    condition_identifiers = set(condition.event_identifiers)
+                    if condition_identifiers.issubset(seen_events):
+                        new_parent.add_condition(condition)
+                    else:
+                        new_conditions.append(condition)
+                conditions = new_conditions
                 old_parent.set_parent(new_parent)
                 right_child.set_parent(new_parent)
                 old_parent = new_parent
@@ -57,13 +68,6 @@ class LeftDeepTreeInitializer(GraphInitializer):
                 initial_condition_node_identifier -= 1
 
         root_node = new_parent if events_num > 1 else old_parent
-        for condition in conditions:
-            if len(condition.event_indices) == 1:
-                leaves[condition.event_indices[0]].add_condition(condition)
-            else:
-                max_index = max(condition.event_indices)
-                inner_nodes[max_index - 1].add_condition(condition)
-
         pattern_query_graph = PatternQueryGraph.PatternQueryGraph(root_node, leaves)
         return pattern_query_graph
 
