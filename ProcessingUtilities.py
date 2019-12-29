@@ -28,11 +28,11 @@ class Event:
 
     @staticmethod
     def same_events(event1, event2) -> bool:
-        return True if event1.attributes.cmp(event2.attributes) == 0 else False
+        return event1.attributes == event2.attributes
 
     def __str__(self):
         join = ','.join(str(value) for value in self.attributes.values())
-        return join + "\n"
+        return join
 
 
 class EventTypeOrPatternAndIdentifier:
