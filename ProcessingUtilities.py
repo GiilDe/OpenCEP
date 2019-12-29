@@ -280,7 +280,7 @@ class FileOutputInterface(OutputInterface):
         def result_to_str(_result: typing.List[Event]):
             s = " ###result### \n"
             for event in _result:
-                s += str(event)
+                s += str(event) + "\n"
             s += " ### "
             return s
 
