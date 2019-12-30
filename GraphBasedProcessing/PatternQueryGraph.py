@@ -31,8 +31,9 @@ class ConditionNode(Node):
     """
     represents an inner node in the graph that holds an operator and a condition list and partial results
     """
-    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, operator: ProcessingUtilities.Operator, time_limit,
-                 children: List[Node] = None, identifier=None, conditions: List[ProcessingUtilities.Condition] = None, parent=None):
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, operator: ProcessingUtilities.Operator,
+                 time_limit, children: List[Node] = None, identifier=None,
+                 conditions: List[ProcessingUtilities.Condition] = None, parent=None):
         """
         :param children:
         :param conditions:
