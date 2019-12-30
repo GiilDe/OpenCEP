@@ -38,7 +38,7 @@ class Processor:
             self.data_file_path = Processor.sorted_prefix + self.data_file_path
             sort_file(time_attribute_index, data_file_path, self.data_file_path)
 
-    def query(self, pattern_queries: typing.List[ProcessingUtilities.CleanPatternQuery],
+    def query(self, pattern_queries: typing.List[ProcessingUtilities.PatternQuery],
               evaluation_model: ProcessingUtilities.EvaluationModel,
               input_interface: ProcessingUtilities.InputInterface = ProcessingUtilities.TrivialInputInterface(),
               output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()):

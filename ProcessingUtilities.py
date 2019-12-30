@@ -1,8 +1,6 @@
 import typing
 import itertools
 
-time_limit = None
-
 
 class Event:
     def __init__(self, attribute_names: typing.List[str], values: typing.List, time_name, type_name):
@@ -33,6 +31,9 @@ class Event:
     def __str__(self):
         join = ','.join(str(value) for value in self.attributes.values())
         return join
+
+    def set_time_to_counter(self, counter):
+        self.attributes[self.time_name] = counter
 
 
 class EventTypeOrPatternAndIdentifier:
@@ -158,11 +159,10 @@ class CleanPatternQuery(PatternQuery):
     A class representing a "clean" pattern query meaning the pattern query input after being processed by the
     interface class (the inner algorithms only know this class).
     """
-    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], _time_limit):
+    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], time_limit):
         self.event_pattern = event_pattern
         self.conditions = conditions
-        global time_limit
-        time_limit = _time_limit
+        self.time_limit = time_limit
 
 
 class StringPatternQuery(PatternQuery):
@@ -258,7 +258,7 @@ class InputInterface:
     """
     This is an abstract class to generalize the possible ways of processing various types of PatterQuery
     """
-    def get_clean_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery]) \
+    def get_clean_pattern_queries(self, pattern_queries: typing.Iterable[PatternQuery]) \
             -> typing.Iterable[CleanPatternQuery]:
         pass
 

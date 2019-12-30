@@ -31,9 +31,8 @@ class ConditionNode(Node):
     """
     represents an inner node in the graph that holds an operator and a condition list and partial results
     """
-    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, children: List[Node],
-                 operator: ProcessingUtilities.Operator, identifier=None,
-                 conditions: List[ProcessingUtilities.Condition] = None, parent=None):
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, operator: ProcessingUtilities.Operator, time_limit,
+                 children: List[Node] = None, identifier=None, conditions: List[ProcessingUtilities.Condition] = None, parent=None):
         """
         :param children:
         :param conditions:
@@ -44,12 +43,12 @@ class ConditionNode(Node):
         self.children = children
         self.operator = operator
         self.identifier = identifier
+        self.time_limit = time_limit
 
     def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
             -> bool:
-        if partial_result.end_time - partial_result.start_time > ProcessingUtilities.time_limit:
-            return False
-        return all(condition.check_condition(partial_result) for condition in self.conditions)
+        return partial_result.end_time - partial_result.start_time <= self.time_limit and \
+               all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def try_add_partial_result(self, partial_result: ProcessingUtilities.PartialResult, diffuser_child: Node):
         """
@@ -66,6 +65,9 @@ class ConditionNode(Node):
                     self.parent.try_add_partial_result(new_result, self)
         return self
 
+    def set_children(self, children: List[Node]):
+        self.children = children
+
 
 class EventNode(Node):
     """
@@ -80,8 +82,6 @@ class EventNode(Node):
 
     def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
             -> bool:
-        if partial_result.end_time - partial_result.start_time > ProcessingUtilities.time_limit:
-            return False
         return all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def try_add_partial_result(self, event: ProcessingUtilities.Event):
