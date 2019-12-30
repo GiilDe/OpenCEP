@@ -6,12 +6,13 @@ class Node:
     """
     abstract class, predecessor of ConditionNode and EventNode
     """
-    def __init__(self, conditions: List[ProcessingUtilities.Condition] = None, parent=None):
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel,
+                 conditions: List[ProcessingUtilities.Condition] = None, parent=None):
         if conditions is None:
             self.conditions = []
         self.conditions = conditions if conditions else []
         self.parent = parent
-        self.partial_results_buffer = []
+        self.partial_results_buffer = memory_model
 
     def add_condition(self, condition: ProcessingUtilities.Condition):
         self.conditions.append(condition)
@@ -30,7 +31,8 @@ class ConditionNode(Node):
     """
     represents an inner node in the graph that holds an operator and a condition list and partial results
     """
-    def __init__(self, children: List[Node], operator: ProcessingUtilities.Operator, identifier=None,
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, children: List[Node],
+                 operator: ProcessingUtilities.Operator, identifier=None,
                  conditions: List[ProcessingUtilities.Condition] = None, parent=None):
         """
         :param children:
@@ -38,7 +40,7 @@ class ConditionNode(Node):
         :param operator:
         :param parent:
         """
-        super().__init__(conditions, parent)
+        super().__init__(memory_model, conditions, parent)
         self.children = children
         self.operator = operator
         self.identifier = identifier
@@ -59,7 +61,7 @@ class ConditionNode(Node):
         for new_result in self.operator.get_new_results(children_buffers, partial_result, self.identifier):
             if self._check_conditions(new_result):
                 new_result.operator_type_of_node = type(self.operator)
-                self.partial_results_buffer.append(new_result)
+                self.partial_results_buffer.add_partial_result(new_result)
                 if self.parent:
                     self.parent.try_add_partial_result(new_result, self)
         return self
@@ -69,9 +71,10 @@ class EventNode(Node):
     """
     represents a leaf node in the graph that holds events
     """
-    def __init__(self, event_type_and_identifier: ProcessingUtilities.EventTypeOrPatternAndIdentifier,
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel,
+                 event_type_and_identifier: ProcessingUtilities.EventTypeOrPatternAndIdentifier,
                  parent: ConditionNode = None, conditions: List[ProcessingUtilities.Condition] = None):
-        super().__init__(conditions, parent)
+        super().__init__(memory_model, conditions, parent)
         self.event_type = event_type_and_identifier.event_type_or_pattern
         self.event_identifier = event_type_and_identifier.identifier
 
@@ -91,7 +94,7 @@ class EventNode(Node):
             partial_result = ProcessingUtilities.PartialResult({self.event_identifier: event},
                                                                identifier=self.event_identifier)
             if self._check_conditions(partial_result):
-                self.partial_results_buffer.append(partial_result)
+                self.partial_results_buffer.add_partial_result(partial_result)
                 self.parent.try_add_partial_result(partial_result, self)
         return self
 

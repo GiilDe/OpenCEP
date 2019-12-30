@@ -40,16 +40,16 @@ class LeftDeepTreeInitializer(GraphInitializer):
         events_num = len(events)
         conditions = pattern_queries.conditions
         inner_nodes = []
-        old_parent = PatternQueryGraph.EventNode(events[0])
+        old_parent = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), events[0])
         leaves = [old_parent]
         seen_events = {events[0].identifier}
         if events_num > 1:
             for i in range(1, events_num):
-                right_child = PatternQueryGraph.EventNode(events[i])
+                right_child = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), events[i])
                 identifier = events[i].identifier
                 seen_events.add(identifier)
                 leaves.append(right_child)
-                new_parent = PatternQueryGraph.ConditionNode([old_parent, right_child],
+                new_parent = PatternQueryGraph.ConditionNode(ProcessingUtilities.ListWrapper(), [old_parent, right_child],
                                                              operator_type(get_params_to_operator_construction()),
                                                              initial_condition_node_identifier)
                 new_conditions = []

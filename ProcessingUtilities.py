@@ -100,6 +100,25 @@ class PartialResult:
         return result
 
 
+class MemoryModel:
+    def add_partial_result(self, partial_result: PartialResult):
+        pass
+
+    def __iter__(self):
+        pass
+
+
+class ListWrapper(MemoryModel):
+    def __init__(self):
+        self.l = []
+
+    def __iter__(self):
+        return iter(self.l)
+
+    def add_partial_result(self, partial_result: PartialResult):
+        self.l.append(partial_result)
+
+
 class Condition:
     """
     this class represents a predicate (for example for events A, B: A.x > B.x)
@@ -166,12 +185,12 @@ class EvaluationModel:
 
 
 class Operator:
-    def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
+    def get_new_results(self, children_buffers: typing.List[MemoryModel],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         pass
 
     @staticmethod
-    def get_all_possible_combinations(children_buffers: typing.List[typing.List[PartialResult]],
+    def get_all_possible_combinations(children_buffers: typing.List[MemoryModel],
                                       new_result: PartialResult):
         children_buffers.append([new_result])
         return itertools.product(*children_buffers)
@@ -210,7 +229,7 @@ class Seq(Operator):
             events_ordered.append(partial_results_dict[identifier])
         return events_ordered
 
-    def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
+    def get_new_results(self, children_buffers: typing.List[MemoryModel],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         result = []
         for partial_results in self.get_all_possible_combinations(children_buffers, new_result):
@@ -228,7 +247,7 @@ class And(Operator):
     def __init__(self, *args):
         pass
 
-    def get_new_results(self, children_buffers: typing.List[typing.List[PartialResult]],
+    def get_new_results(self, children_buffers: typing.List[MemoryModel],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
         return [PartialResult.init_with_partial_results(partial_results, And, identifier) for partial_results in
                 self.get_all_possible_combinations(children_buffers, new_result) if not
@@ -290,3 +309,5 @@ class FileOutputInterface(OutputInterface):
                 output.write(result_to_str(result))
             output.close()
         return query_results
+
+
