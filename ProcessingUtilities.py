@@ -108,6 +108,9 @@ class MemoryModel:
     def __iter__(self):
         pass
 
+    def get_relevant_results(self, current_time, time_limit, **kwargs):
+        pass
+
 
 class ListWrapper(MemoryModel):
     def __init__(self):
@@ -118,6 +121,18 @@ class ListWrapper(MemoryModel):
 
     def add_partial_result(self, partial_result: PartialResult):
         self.l.append(partial_result)
+
+    def get_relevant_results(self, current_time, time_limit, **kwargs):
+        is_sorted = kwargs['is_sorted']
+        if is_sorted:
+            i = len(self.l) - 1 if len(self.l) > 0 else 0
+            while i > 0 and current_time - self.l[i].end_time <= time_limit:
+                i -= 1
+            del self.l[:i]
+        else:
+            relevant_events = [result for result in self.l if current_time - result.end_time < time_limit]
+            self.l = relevant_events
+        return self.l
 
 
 class Condition:

@@ -29,7 +29,7 @@ class TestingTree(GraphInitializer):
         right_son = PatternQueryGraph.ConditionNode(ProcessingUtilities.ListWrapper(), ProcessingUtilities.And(),
                                                    pattern_queries.time_limit, identifier=-3,
                                                    conditions=[])
-        events = [PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), stock_and_id)
+        events = [PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_queries[0].time_limit, stock_and_id)
                   for stock_and_id in stock_types_with_identifiers]
         left_son.set_children([events[0], events[1]])
         right_son.set_children([events[2], events[3]])
@@ -76,12 +76,13 @@ class LeftDeepTreeInitializer(GraphInitializer):
         events_num = len(events)
         conditions = pattern_query.conditions
         inner_nodes = []
-        old_parent = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), events[0])
+        old_parent = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_query.time_limit, events[0])
         leaves = [old_parent]
         seen_events = {events[0].identifier}
         if events_num > 1:
             for i in range(1, events_num):
-                right_child = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), events[i])
+                right_child = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_query.time_limit,
+                                                          events[i])
                 identifier = events[i].identifier
                 seen_events.add(identifier)
                 leaves.append(right_child)

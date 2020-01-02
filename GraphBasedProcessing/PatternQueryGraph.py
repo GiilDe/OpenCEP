@@ -6,13 +6,14 @@ class Node:
     """
     abstract class, predecessor of ConditionNode and EventNode
     """
-    def __init__(self, memory_model: ProcessingUtilities.MemoryModel,
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, time_limit,
                  conditions: List[ProcessingUtilities.Condition] = None, parent=None):
         if conditions is None:
             self.conditions = []
         self.conditions = conditions if conditions else []
         self.parent = parent
         self.partial_results_buffer = memory_model
+        self.time_limit = time_limit
 
     def add_condition(self, condition: ProcessingUtilities.Condition):
         self.conditions.append(condition)
@@ -20,8 +21,9 @@ class Node:
     def set_parent(self, parent):
         self.parent = parent
 
-    def _get_results(self):
-        return self.partial_results_buffer
+    def get_relevant_results(self, current_time):
+        return self.partial_results_buffer.get_relevant_results(current_time, self.time_limit,
+                                                                is_sorted=type(self) == EventNode)
 
     def get_results(self):
         return [list(partial_result.completely_unpack().values()) for partial_result in self.partial_results_buffer]
@@ -57,7 +59,9 @@ class ConditionNode(Node):
         :param diffuser_child:
         :return:
         """
-        children_buffers = [child._get_results() for child in self.children if child != diffuser_child]
+        current_time = partial_result.start_time
+        children_buffers = [child.get_relevant_results(current_time) for child in self.children
+                            if child != diffuser_child]
         for new_result in self.operator.get_new_results(children_buffers, partial_result, self.identifier):
             if self._check_conditions(new_result):
                 new_result.operator_type_of_node = type(self.operator)
@@ -74,10 +78,10 @@ class EventNode(Node):
     """
     represents a leaf node in the graph that holds events
     """
-    def __init__(self, memory_model: ProcessingUtilities.MemoryModel,
+    def __init__(self, memory_model: ProcessingUtilities.MemoryModel, time_limit,
                  event_type_and_identifier: ProcessingUtilities.EventTypeOrPatternAndIdentifier,
                  parent: ConditionNode = None, conditions: List[ProcessingUtilities.Condition] = None):
-        super().__init__(memory_model, conditions, parent)
+        super().__init__(memory_model, time_limit, conditions, parent)
         self.event_type = event_type_and_identifier.event_type_or_pattern
         self.event_identifier = event_type_and_identifier.identifier
 
