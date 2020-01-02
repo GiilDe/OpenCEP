@@ -126,11 +126,11 @@ class ListWrapper(MemoryModel):
         is_sorted = kwargs['is_sorted']
         if is_sorted:
             i = len(self.l) - 1 if len(self.l) > 0 else 0
-            while i > 0 and current_time - self.l[i].end_time <= time_limit:
+            while i > 0 and current_time - self.l[i].start_time <= time_limit:
                 i -= 1
             del self.l[:i]
         else:
-            relevant_events = [result for result in self.l if current_time - result.end_time < time_limit]
+            relevant_events = [result for result in self.l if current_time - result.start_time < time_limit]
             self.l = relevant_events
         return self.l
 
