@@ -136,7 +136,7 @@ class ListWrapper(MemoryModel):
                 i -= 1
             del self.l[:i]
         else:
-            relevant_events = [result for result in self.l if current_time - result.start_time < time_limit]
+            relevant_events = [result for result in self.l if current_time - result.start_time <= time_limit]
             self.l = relevant_events
         return self.l
 

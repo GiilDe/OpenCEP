@@ -23,9 +23,9 @@ if __name__ == "__main__":
     stock_types_with_identifiers[0] = temp
     seq_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers,
                                                          ProcessingUtilities.Seq(range(4)))
-    seq_pattern_query = ProcessingUtilities.CleanPatternQuery(seq_event_pattern, [condition], 16, False)
+    seq_pattern_query = ProcessingUtilities.CleanPatternQuery(seq_event_pattern, [condition], 16)
     and_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers, ProcessingUtilities.And())
-    and_pattern_query = ProcessingUtilities.CleanPatternQuery(and_event_pattern, [condition], 16, False)
+    and_pattern_query = ProcessingUtilities.CleanPatternQuery(and_event_pattern, [condition], 16)
     pattern_queries = [seq_pattern_query, and_pattern_query]
     left_deep_initializer = GraphBasedProcessingUtilities.LeftDeepTreeInitializer()
     left_deep_tree_processor = GraphBasedProcessingUtilities.NaiveMultipleTreesGraphBasedProcessing(left_deep_initializer)
