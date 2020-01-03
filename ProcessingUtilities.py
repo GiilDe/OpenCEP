@@ -111,7 +111,6 @@ class MemoryModel:
     def get_relevant_results(self, current_time, time_limit, **kwargs):
         pass
 
-
 class ListWrapper(MemoryModel):
     def __init__(self):
         self.l = []
