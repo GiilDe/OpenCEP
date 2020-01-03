@@ -48,6 +48,10 @@ class ConditionNode(Node):
         self.identifier = identifier
         self.time_limit = time_limit
 
+    def set_output_interface(self, output_interface: ProcessingUtilities.OutputInterface =
+    ProcessingUtilities.TrivialOutputInterface()):
+        self.output_interface = output_interface
+
     def _check_conditions(self, partial_result: Union[ProcessingUtilities.PartialResult, ProcessingUtilities.Event])\
             -> bool:
         return partial_result.end_time - partial_result.start_time <= self.time_limit and \
@@ -60,6 +64,11 @@ class ConditionNode(Node):
         :return:
         """
         current_time = partial_result.start_time
+        if self.is_root() and self.output_interface.output_while_running():
+            results = self.partial_results_buffer.pop_results()
+            self.output_interface.output_results\
+                ([list(partial_result.completely_unpack().values()) for partial_result in results])
+
         children_buffers = [child.get_relevant_results(current_time) for child in self.children
                             if child != diffuser_child]
         for new_result in self.operator.get_new_results(children_buffers, partial_result, self.identifier):
@@ -72,6 +81,9 @@ class ConditionNode(Node):
 
     def set_children(self, children: List[Node]):
         self.children = children
+
+    def is_root(self):
+        return self.parent is None
 
 
 class EventNode(Node):

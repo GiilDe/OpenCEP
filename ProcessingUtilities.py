@@ -114,6 +114,9 @@ class MemoryModel:
     def get_relevant_results(self, current_time, time_limit, **kwargs):
         pass
 
+    def pop_results(self):
+        pass
+
 
 class ListWrapper(MemoryModel):
     def __init__(self):
@@ -136,6 +139,11 @@ class ListWrapper(MemoryModel):
             relevant_events = [result for result in self.l if current_time - result.start_time < time_limit]
             self.l = relevant_events
         return self.l
+
+    def pop_results(self):
+        temp = self.l
+        self.l = []
+        return temp
 
 
 class Condition:
@@ -191,17 +199,6 @@ class StringPatternQuery(PatternQuery):
     WHERE
     """
     # def __init__(self, pattern_query: str):
-
-
-class EvaluationModel:
-    def handle_event(self, event, event_counter):
-        pass
-
-    def set_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery]):
-        pass
-
-    def get_results(self) -> typing.List:
-        pass
 
 
 class Operator:
@@ -305,17 +302,25 @@ class OutputInterface:
     def output_results(self, results):
         pass
 
+    @staticmethod
+    def output_while_running() -> bool:
+        pass
+
 
 class TrivialOutputInterface(OutputInterface):
     def output_results(self, results):
         return results
 
+    @staticmethod
+    def output_while_running() -> bool:
+        return False
+
 
 class FileOutputInterface(OutputInterface):
-    def __init__(self, output_files: typing.Iterable[str]):
-        self.output_files = output_files
+    def __init__(self, output_file: str):
+        self.output_file = output_file
 
-    def output_results(self, query_results):
+    def output_results(self, query_result):
         def result_to_str(_result: typing.List[Event]):
             s = " ###result### \n"
             for event in _result:
@@ -323,11 +328,24 @@ class FileOutputInterface(OutputInterface):
             s += " ### "
             return s
 
-        for output_file, query_result in zip(self.output_files, query_results):
-            output = open(output_file, 'w')
-            for result in query_result:
-                output.write(result_to_str(result))
-            output.close()
-        return query_results
+        output = open(self.output_file, 'w')
+        for result in query_result:
+            output.write(result_to_str(result))
+        output.close()
+        return query_result
+
+    @staticmethod
+    def output_while_running() -> bool:
+        return True
 
 
+class EvaluationModel:
+    def handle_event(self, event, event_counter):
+        pass
+
+    def set_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery],
+                            output_interfaces: typing.List[OutputInterface]):
+        pass
+
+    def get_results(self) -> typing.List:
+        pass

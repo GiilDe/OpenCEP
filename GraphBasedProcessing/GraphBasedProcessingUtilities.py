@@ -4,7 +4,9 @@ import typing
 
 
 class GraphInitializer:
-    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
+    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery,
+                  output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()) \
+            -> PatternQueryGraph.PatternQueryGraph:
         pass
 
 
@@ -49,9 +51,12 @@ class LeftDeepTreeInitializer(GraphInitializer):
     This class receives a PatternQuery and generates a trivial left deep tree representing the pattern query.
     This class cannot implement operator nesting.
     """
-    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
+    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery,
+                  output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()) \
+            -> PatternQueryGraph.PatternQueryGraph:
         """
         assumes no operator nesting
+        :param output_interface:
         :param pattern_query:
         :return: PatternQueryGraph.PatternQueryGraph that is a left deep tree representing the pattern query
         """
@@ -105,6 +110,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
                 initial_condition_node_identifier -= 1
 
         root_node = new_parent if events_num > 1 else old_parent
+        root_node.set_output_interface(output_interface)
         pattern_query_graph = PatternQueryGraph.PatternQueryGraph(root_node, leaves)
         return pattern_query_graph
 
@@ -122,8 +128,10 @@ class NaiveMultipleTreesGraphBasedProcessing(ProcessingUtilities.EvaluationModel
         self.graph_initializer = graph_initializer
         self.graphs = []
 
-    def set_pattern_queries(self, pattern_queries: typing.Iterable[ProcessingUtilities.CleanPatternQuery]):
-        self.graphs = [self.graph_initializer.get_graph(pattern_query) for pattern_query in pattern_queries]
+    def set_pattern_queries(self, pattern_queries: typing.Iterable[ProcessingUtilities.CleanPatternQuery],
+                            output_interfaces: typing.List[ProcessingUtilities.OutputInterface]):
+        self.graphs = [self.graph_initializer.get_graph(pattern_query, output_interface) for
+                       pattern_query, output_interface in zip(pattern_queries, output_interfaces)]
 
     def handle_event(self, event, event_counter):
         for graph in self.graphs:

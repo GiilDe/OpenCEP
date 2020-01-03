@@ -41,7 +41,7 @@ class Processor:
     def query(self, pattern_queries: typing.List[ProcessingUtilities.PatternQuery],
               evaluation_model: ProcessingUtilities.EvaluationModel,
               input_interface: ProcessingUtilities.InputInterface = ProcessingUtilities.TrivialInputInterface(),
-              output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()):
+              output_interfaces: typing.List[ProcessingUtilities.OutputInterface]=None):
         """
 
         :param pattern_queries:
@@ -50,8 +50,10 @@ class Processor:
         :param output_interface:
         :return:
         """
+        if output_interfaces is None:
+            output_interfaces = [ProcessingUtilities.TrivialOutputInterface()]*len((pattern_queries))
         clean_pattern_queries = input_interface.get_clean_pattern_queries(pattern_queries)
-        evaluation_model.set_pattern_queries(clean_pattern_queries)
+        evaluation_model.set_pattern_queries(clean_pattern_queries, output_interfaces)
         data_stream = open(self.data_file_path, 'r')
         counter = 0
         for line in data_stream:
@@ -60,4 +62,4 @@ class Processor:
             counter += 1
         data_stream.close()
         results = evaluation_model.get_results()
-        return output_interface.output_results(results)
+        return results
