@@ -319,6 +319,7 @@ class TrivialOutputInterface(OutputInterface):
 class FileOutputInterface(OutputInterface):
     def __init__(self, output_file: str):
         self.output_file = output_file
+        self.first_call = True
 
     def output_results(self, query_result):
         def result_to_str(_result: typing.List[Event]):
@@ -328,7 +329,8 @@ class FileOutputInterface(OutputInterface):
             s += " ### "
             return s
 
-        output = open(self.output_file, 'w')
+        output = open(self.output_file, 'a') if not self.first_call else open(self.output_file, 'w+')
+        self.first_call = False
         for result in query_result:
             output.write(result_to_str(result))
         output.close()

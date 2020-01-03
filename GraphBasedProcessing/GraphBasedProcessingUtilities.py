@@ -111,7 +111,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
 
         root_node = new_parent if events_num > 1 else old_parent
         root_node.set_output_interface(output_interface)
-        pattern_query_graph = PatternQueryGraph.PatternQueryGraph(root_node, leaves)
+        pattern_query_graph = PatternQueryGraph.PatternQueryGraph(root_node, leaves, pattern_query.use_const_window)
         return pattern_query_graph
 
 
