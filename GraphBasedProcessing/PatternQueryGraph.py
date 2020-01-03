@@ -108,8 +108,9 @@ class PatternQueryGraph:
     """
     a graph that represents a pattern query without operator nesting
     """
-    def __init__(self, root_node: ConditionNode, event_nodes: List[EventNode]):
+    def __init__(self, root_node: ConditionNode, event_nodes: List[EventNode], use_const_window=False):
         self.root_node = root_node
         self.event_nodes = event_nodes
+        self.use_const_window = use_const_window
 
 

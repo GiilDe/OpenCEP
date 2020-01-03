@@ -125,8 +125,10 @@ class NaiveMultipleTreesGraphBasedProcessing(ProcessingUtilities.EvaluationModel
     def set_pattern_queries(self, pattern_queries: typing.Iterable[ProcessingUtilities.CleanPatternQuery]):
         self.graphs = [self.graph_initializer.get_graph(pattern_query) for pattern_query in pattern_queries]
 
-    def handle_event(self, event):
+    def handle_event(self, event, event_counter):
         for graph in self.graphs:
+            if graph.use_const_window:
+                event.set_time_to_counter(event_counter)
             for event_node in graph.event_nodes:
                 event_node.try_add_partial_result(event)
 

@@ -28,6 +28,9 @@ class Event:
     def same_events(event1, event2) -> bool:
         return event1.attributes == event2.attributes
 
+    def __len__(self):
+        return len(self.attributes.keys())
+
     def __str__(self):
         join = ','.join(str(value) for value in self.attributes.values())
         return join
@@ -111,6 +114,7 @@ class MemoryModel:
     def get_relevant_results(self, current_time, time_limit, **kwargs):
         pass
 
+
 class ListWrapper(MemoryModel):
     def __init__(self):
         self.l = []
@@ -173,10 +177,12 @@ class CleanPatternQuery(PatternQuery):
     A class representing a "clean" pattern query meaning the pattern query input after being processed by the
     interface class (the inner algorithms only know this class).
     """
-    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], time_limit):
+    def __init__(self, event_pattern: EventPattern, conditions: typing.List[Condition], time_limit,
+                 use_const_window=False):
         self.event_pattern = event_pattern
         self.conditions = conditions
         self.time_limit = time_limit
+        self.use_const_window = use_const_window
 
 
 class StringPatternQuery(PatternQuery):
@@ -188,7 +194,7 @@ class StringPatternQuery(PatternQuery):
 
 
 class EvaluationModel:
-    def handle_event(self, event):
+    def handle_event(self, event, event_counter):
         pass
 
     def set_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery]):

@@ -53,9 +53,11 @@ class Processor:
         clean_pattern_queries = input_interface.get_clean_pattern_queries(pattern_queries)
         evaluation_model.set_pattern_queries(clean_pattern_queries)
         data_stream = open(self.data_file_path, 'r')
+        counter = 0
         for line in data_stream:
             event = self.get_event_from_line(line)
-            evaluation_model.handle_event(event)
+            evaluation_model.handle_event(event, counter)
+            counter += 1
         data_stream.close()
         results = evaluation_model.get_results()
         return output_interface.output_results(results)
