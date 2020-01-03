@@ -12,7 +12,7 @@ def condition1(A: ProcessingUtilities.Event, B: ProcessingUtilities.Event) -> bo
 
 if __name__ == "__main__":
     # Naive seq, and test
-    condition = ProcessingUtilities.Condition(condition1, [0, 2])
+    condition = ProcessingUtilities.Condition(condition1, [0, 1])
     processor = Processor.Processor("../sorted_NASDAQ_20080201_1.txt", data_formats.metastock7_attributes,
                                     data_formats.metastock7_time_index, data_formats.metastock7_type_index)
     stock_types_with_identifiers = \
@@ -23,9 +23,9 @@ if __name__ == "__main__":
     stock_types_with_identifiers[0] = temp
     seq_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers,
                                                          ProcessingUtilities.Seq(range(4)))
-    seq_pattern_query = ProcessingUtilities.CleanPatternQuery(seq_event_pattern, [condition], 5000, True)
+    seq_pattern_query = ProcessingUtilities.CleanPatternQuery(seq_event_pattern, [condition], 16, False)
     and_event_pattern = ProcessingUtilities.EventPattern(stock_types_with_identifiers, ProcessingUtilities.And())
-    and_pattern_query = ProcessingUtilities.CleanPatternQuery(and_event_pattern, [condition], 5000, True)
+    and_pattern_query = ProcessingUtilities.CleanPatternQuery(and_event_pattern, [condition], 16, False)
     pattern_queries = [seq_pattern_query, and_pattern_query]
     left_deep_initializer = GraphBasedProcessingUtilities.LeftDeepTreeInitializer()
     left_deep_tree_processor = GraphBasedProcessingUtilities.NaiveMultipleTreesGraphBasedProcessing(left_deep_initializer)
