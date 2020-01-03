@@ -42,11 +42,10 @@ class ConditionNode(Node):
         :param operator:
         :param parent:
         """
-        super().__init__(memory_model, conditions, parent)
+        super().__init__(memory_model, time_limit, conditions, parent)
         self.children = children
         self.operator = operator
         self.identifier = identifier
-        self.time_limit = time_limit
 
     def set_output_interface(self, output_interface: ProcessingUtilities.OutputInterface =
     ProcessingUtilities.TrivialOutputInterface()):
