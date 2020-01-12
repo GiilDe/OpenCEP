@@ -13,7 +13,7 @@ def condition1(A: ProcessingUtilities.Event, B: ProcessingUtilities.Event) -> bo
 if __name__ == "__main__":
     # Naive seq, and test
     condition = ProcessingUtilities.Condition(condition1, [0, 1])
-    processor = Processor.Processor("../sorted_NASDAQ_20080201_1.txt", data_formats.metastock7_attributes,
+    processor = Processor.Processor("sorted_NASDAQ_20080201_1.txt", data_formats.metastock7_attributes,
                                     data_formats.metastock7_time_index, data_formats.metastock7_type_index)
     stock_types_with_identifiers = \
         [ProcessingUtilities.EventTypeOrPatternAndIdentifier(type, i) for i, type in enumerate(stock_types)]
