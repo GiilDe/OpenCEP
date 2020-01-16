@@ -63,10 +63,6 @@ class ConditionNode(Node):
         :return:
         """
         current_time = partial_result.start_time
-        if self.is_root() and self.output_interface.output_while_running():
-            results = self.partial_results_buffer.pop_results()
-            self.output_interface.output_results\
-                ([list(partial_result.completely_unpack().values()) for partial_result in results])
 
         children_buffers = [child.get_relevant_results(current_time) for child in self.children
                             if child != diffuser_child]
@@ -76,6 +72,11 @@ class ConditionNode(Node):
                 self.partial_results_buffer.add_partial_result(new_result)
                 if self.parent:
                     self.parent.try_add_partial_result(new_result, self)
+
+        if self.is_root() and self.output_interface.output_while_running():
+            results = self.partial_results_buffer.pop_results()
+            self.output_interface.output_results\
+                ([list(partial_result.completely_unpack().values()) for partial_result in results])
         return self
 
     def set_children(self, children: List[Node]):
