@@ -69,7 +69,7 @@ class ConditionNode(Node):
             -> bool:
         """
         :param partial_result: partial_result to check
-        :return: True if partial result is within the time limit and all conditions hold
+        :return: True if partial result is within the time limit and all conditions hold, False otherwise
         """
         return partial_result.end_time - partial_result.start_time <= self.time_limit and \
                all(condition.check_condition(partial_result) for condition in self.conditions)
@@ -88,7 +88,7 @@ class ConditionNode(Node):
                             if child != diffuser_child]
         for new_result in self.operator.get_new_results(children_buffers, partial_result, self.identifier):
             if self._check_conditions(new_result):
-                new_result.operator_type_of_node = type(self.operator)
+                new_result.operator_type = type(self.operator)
                 self.partial_results_buffer.add_partial_result(new_result)
                 if self.parent:
                     self.parent.try_add_partial_result(new_result, self)
