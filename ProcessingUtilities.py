@@ -3,7 +3,17 @@ import itertools
 
 
 class Event:
+    """
+    This class represents a specific event from the stream
+    """
     def __init__(self, attribute_names: typing.List[str], values: typing.List, time_name, type_name):
+        """
+        :param attribute_names: the names of the attributes (those names should match the attribute names
+        in the conditions functions)
+        :param values: the attributes values
+        :param time_name: the name of the time attribute
+        :param type_name: the name of the type attribute
+        """
         self.attributes = dict(zip(attribute_names, values))
         self.time_name = time_name
         self.type_name = type_name
@@ -11,8 +21,8 @@ class Event:
     def __getattr__(self, item):
         """
         "Simulate" a normal class
-        :param item: attriute name to return
-        :return:
+        :param item: attribute name to return
+        :return: the attribute value
         """
         if item == 'start_time' or item == 'end_time':
             return self.get_time()
@@ -29,6 +39,10 @@ class Event:
         return event1.attributes == event2.attributes
 
     def __len__(self):
+        """
+        for debugging reasons
+        :return:
+        """
         return len(self.attributes.keys())
 
     def __str__(self):
@@ -36,10 +50,17 @@ class Event:
         return join
 
     def set_time_to_counter(self, counter):
+        """
+        used if pattern uses fixed window instead of time limit
+        :param counter:
+        """
         self.attributes[self.time_name] = counter
 
 
 class EventTypeOrPatternAndIdentifier:
+    """
+    Simple tuple class that glues and event type and its identifier. Used in event pattern.
+    """
     def __init__(self, event_type_or_pattern, identifier):
         self.event_type_or_pattern = event_type_or_pattern
         self.identifier = identifier
@@ -55,16 +76,25 @@ class EventPattern:
     def __init__(self, event_types_or_patterns: typing.List, operator):
         """
         :param event_types_or_patterns: List[Union[TypeEventAndIdentifier, EventPattern]]
-        :param operator:
+        :param operator: operator associated with this event pattern
         """
         self.operator = operator
         self.event_types_or_patterns = event_types_or_patterns
 
 
 class PartialResult:
-    def __init__(self, identifier_to_partial_result: typing.Dict, operator_type_of_node=None, identifier=None):
+    """
+    This class holds a partial match.
+    """
+    def __init__(self, identifier_to_partial_result: typing.Dict, operator_type=None, identifier=None):
+        """
+        :param identifier_to_partial_result: a dictionary that holds all the partial results that this partial results
+        is composed of. It holds a mapping from identifier to partial results.
+        :param operator_type: the operator type that created this partial results
+        :param identifier: the identifier associated with this partial match
+        """
         self.identifier_to_partial_result = identifier_to_partial_result
-        self.operator_type_of_node = operator_type_of_node
+        self.operator_type = operator_type
         self.identifier = identifier
         self.start_time = min(self.identifier_to_partial_result.values(),
                               key=lambda partial_result_or_event: partial_result_or_event.start_time).start_time
@@ -72,30 +102,37 @@ class PartialResult:
                             key=lambda partial_result_or_event: partial_result_or_event.end_time).end_time
 
     def is_event_wrapper(self) -> bool:
+        """
+        :return: True if this partial result holds a single event (the basis of the following recursive functions),
+        False otherwise
+        """
         return len(self.identifier_to_partial_result) == 1
 
     @staticmethod
-    def init_with_partial_results(partial_results, operator_type_of_node=None, identifier=None):
+    def init_with_partial_results(partial_results, operator_type=None, identifier=None):
+        """
+        composing a new partial results from partial results
+        :param partial_results: results to compose
+        :param operator_type: operator type that is composing this partial result
+        :param identifier: relevant identifier
+        :return: new partial results
+        """
         identifier_to_partial_result = {}
         for partial_result in partial_results:
-            if partial_result.operator_type_of_node is None and not partial_result.is_event_wrapper:
+            if partial_result.operator_type is None and not partial_result.is_event_wrapper:
                 identifier_to_partial_result.update(partial_result.identifier_to_partial_result)
             else:
                 identifier_to_partial_result.update({partial_result.identifier: partial_result})
 
-        return PartialResult(identifier_to_partial_result, operator_type_of_node, identifier)
-
-    def unpack(self):
-        if self.is_event_wrapper():
-            return {self.identifier: self}
-        if self.operator_type_of_node is not None:
-            return {self.identifier: self}
-        result = dict()
-        for partial_result in self.identifier_to_partial_result.values():
-            result.update(partial_result.unpack())
-        return result
+        return PartialResult(identifier_to_partial_result, operator_type, identifier)
 
     def completely_unpack(self) -> typing.Dict:
+        """
+        recursive function that traversed all inner partial results and unpacks all the identifier to partial results
+        dictionaries that this partial results holds.
+        :return: a dict that holds mapping from identifier to event for all the events that are
+        (directly or in directly) in this partial result
+        """
         if self.is_event_wrapper():
             return self.identifier_to_partial_result
         result = dict()
@@ -103,8 +140,23 @@ class PartialResult:
             result.update(partial_result.completely_unpack())
         return result
 
+    def unpack(self):
+        """
+        :return: similar to above, but returns a dict holding from identifier to partial results for all the partial results
+        that are (directly or in directly) in this partial result
+        """
+        if self.is_event_wrapper() or self.operator_type is not None:
+            return {self.identifier: self}
+        result = dict()
+        for partial_result in self.identifier_to_partial_result.values():
+            result.update(partial_result.unpack())
+        return result
+
 
 class MemoryModel:
+    """
+    Abstract class that is responsible for managing the saving and loading of (partial) matches
+    """
     def add_partial_result(self, partial_result: PartialResult):
         pass
 
@@ -112,13 +164,25 @@ class MemoryModel:
         pass
 
     def get_relevant_results(self, current_time, time_limit, **kwargs):
+        """
+        :param current_time: time of the current processed event
+        :param time_limit: the time limit associated with the query
+        :param kwargs:
+        :return: all the partial matches that are still in the time limit
+        """
         pass
 
     def pop_results(self):
+        """
+        :return: all current partial matches
+        """
         pass
 
 
 class ListWrapper(MemoryModel):
+    """
+    A simple memory model implemented as a list
+    """
     def __init__(self):
         self.l = []
 
@@ -202,13 +266,27 @@ class StringPatternQuery(PatternQuery):
 
 
 class Operator:
+    """
+    Abstract class representing an operator
+    """
     def get_new_results(self, children_buffers: typing.List[MemoryModel],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
+        """
+        :param children_buffers: list where each cell is a list that holds partial matches
+        :param new_result: the new partial results to be composed to existing partial results
+        :param identifier: the relevant identifier
+        :return: new results composed of the new result and a partial results from each child buffer
+        """
         pass
 
     @staticmethod
     def get_all_possible_combinations(children_buffers: typing.List[MemoryModel],
                                       new_result: PartialResult):
+        """
+        :param children_buffers: list where each cell is a list that holds partial matches.
+        :param new_result: the new partial results to be composed to existing partial results
+        :return: all possible combinations of composing a partial result from each buffer and the new results
+        """
         children_buffers.append([new_result])
         return itertools.product(*children_buffers)
 
@@ -221,6 +299,10 @@ class Operator:
 
     @staticmethod
     def contains_same_event_multiple_times(partial_results) -> bool:
+        """
+        :param partial_results:
+        :return: True checks if the partial results contains the same event multiple times, False otherwise
+        """
         s = set()
         for partial_result in partial_results:
             events = partial_result.completely_unpack()
@@ -233,6 +315,9 @@ class Operator:
 
 
 class Seq(Operator):
+    """
+    Class representing a seq operator
+    """
     def __init__(self, identifiers_order):
         """
         :param identifiers_order: an iterable defining the order of the identifiers in the seq
@@ -241,6 +326,11 @@ class Seq(Operator):
 
     @staticmethod
     def get_sorted_by_identifier_order(partial_results_dict, identifiers_order):
+        """
+        :param partial_results_dict: a dictionary mapping from identifier to partial result
+        :param identifiers_order: a list of identifiers that defines the desired order (for example: ['A', 'B', 'C'])
+        :return: a list of partial results ordered by the given ordering
+        """
         events_ordered = []
         for identifier in identifiers_order:
             events_ordered.append(partial_results_dict[identifier])
@@ -248,6 +338,12 @@ class Seq(Operator):
 
     def get_new_results(self, children_buffers: typing.List[MemoryModel],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
+        """
+        :param children_buffers: list where each cell is a list that holds partial matches
+        :param new_result: the new partial results to be composed to existing partial results
+        :param identifier: the relevant identifier
+        :return: returns every ordered combination that does not contain the same event twice
+        """
         result = []
         for partial_results in self.get_all_possible_combinations(children_buffers, new_result):
             partial_results_dict = self.get_events_from_partial_results(partial_results)
@@ -261,11 +357,20 @@ class Seq(Operator):
 
 
 class And(Operator):
+    """
+    Class representing an and operator
+    """
     def __init__(self, *args):
         pass
 
     def get_new_results(self, children_buffers: typing.List[MemoryModel],
                         new_result: PartialResult, identifier) -> typing.List[PartialResult]:
+        """
+        :param children_buffers: list where each cell is a list that holds partial matches
+        :param new_result: the new partial results to be composed to existing partial results
+        :param identifier: the relevant identifier
+        :return: returns every combination that does not contain the same event twice
+        """
         return [PartialResult.init_with_partial_results(partial_results, And, identifier) for partial_results in
                 self.get_all_possible_combinations(children_buffers, new_result) if not
                 self.contains_same_event_multiple_times(self.get_events_from_partial_results(partial_results).values())]
@@ -304,10 +409,17 @@ class OutputInterface:
 
     @staticmethod
     def output_while_running() -> bool:
+        """
+        :return: True if this output interface supports outputting part of the results while stream is still processed
+        (better for performance where possible)
+        """
         pass
 
 
 class TrivialOutputInterface(OutputInterface):
+    """
+    Trivial output interface that simply returns the results it gets
+    """
     def output_results(self, results):
         return results
 
@@ -317,7 +429,13 @@ class TrivialOutputInterface(OutputInterface):
 
 
 class FileOutputInterface(OutputInterface):
+    """
+    An OutputInterface that outputs the results to a file
+    """
     def __init__(self, output_file: str):
+        """
+        :param output_file: file path to output results to
+        """
         self.output_file = output_file
         self.first_call = True
 
@@ -342,11 +460,20 @@ class FileOutputInterface(OutputInterface):
 
 
 class EvaluationModel:
+    """
+    An abstract class responsible of processing events
+    """
     def handle_event(self, event, event_counter):
         pass
 
     def set_pattern_queries(self, pattern_queries: typing.Iterable[CleanPatternQuery],
                             output_interfaces: typing.List[OutputInterface]):
+        """
+        called before starting to process the stream to initialize the model
+        :param pattern_queries:
+        :param output_interfaces:
+        :return:
+        """
         pass
 
     def get_results(self) -> typing.List:
