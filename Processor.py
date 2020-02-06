@@ -9,7 +9,29 @@ class Processor:
     """
     sorted_prefix = 'sorted_'
 
+    def __init__(self, data_file_path: str, attribute_names: typing.List[str], time_attribute_index: int,
+                 type_attribute_index: int, sorted_by_time=True):
+        """
+        initializes all the needed parameters and sorts the input file according to time (if needed)
+        :param data_file_path: input file path
+        :param attribute_names: attribute names of the events in the data file
+        :param time_attribute_index: the index of the time attribute in attribute_names
+        :param type_attribute_index: the index of the event type (name) attribute in attribute_names
+        :param sorted_by_time: whether or not the input file is sorted by the time attribute
+        """
+        self.data_file_path = data_file_path
+        self.attribute_names = attribute_names
+        self.time_name = attribute_names[time_attribute_index]
+        self.type_name = attribute_names[type_attribute_index]
+        if not sorted_by_time:
+            self.data_file_path = Processor.sorted_prefix + self.data_file_path
+            sort_file(time_attribute_index, data_file_path, self.data_file_path)
+
     def get_event_from_line(self, line):
+        """
+        parses a line from the event input file into an event class
+        :param line: the line from the input file representing to current event
+        """
         def convert_value(value: str):
             def isfloat(val: str):
                 try:
@@ -28,24 +50,17 @@ class Processor:
         new_event = ProcessingUtilities.Event(self.attribute_names, values, self.time_name, self.type_name)
         return new_event
 
-    def __init__(self, data_file_path: str, attribute_names: typing.List[str], time_attribute_index: int,
-                 type_attribute_index: int, sorted_by_time=True):
-        self.data_file_path = data_file_path
-        self.attribute_names = attribute_names
-        self.time_name = attribute_names[time_attribute_index]
-        self.type_name = attribute_names[type_attribute_index]
-        if not sorted_by_time:
-            self.data_file_path = Processor.sorted_prefix + self.data_file_path
-            sort_file(time_attribute_index, data_file_path, self.data_file_path)
+
 
     def query(self, pattern_queries: typing.List[ProcessingUtilities.PatternQuery],
               evaluation_model: ProcessingUtilities.EvaluationModel,
               input_interface: ProcessingUtilities.InputInterface = ProcessingUtilities.TrivialInputInterface(),
               output_interfaces: typing.List[ProcessingUtilities.OutputInterface]=None):
         """
-
-        :param pattern_queries:
-        :param evaluation_model:
+        creates the evaluation model based on the give queries and the corresponding output interfaces, and parses event
+        lines from the event files and passes them as event objects to the evaluation model
+        :param pattern_queries: the pattern queries to query by
+        :param evaluation_model: the evaluation model to use
         :param input_interface:
         :param output_interface:
         :return:

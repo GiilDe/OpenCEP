@@ -4,6 +4,9 @@ import typing
 
 
 class GraphInitializer:
+    """
+    abstract class initializing the evaluation graph
+    """
     def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery,
                   output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()) \
             -> PatternQueryGraph.PatternQueryGraph:
@@ -11,7 +14,11 @@ class GraphInitializer:
 
 
 class TestingTree(GraphInitializer):
-    def get_graph(self, pattern_queries: ProcessingUtilities.CleanPatternQuery) -> PatternQueryGraph.PatternQueryGraph:
+    """
+    test class for the full_tree_test.py file
+    """
+    def get_graph(self, pattern_query: ProcessingUtilities.CleanPatternQuery,
+                  output_interface: ProcessingUtilities.OutputInterface = ProcessingUtilities.TrivialOutputInterface()) -> PatternQueryGraph.PatternQueryGraph:
 
         def conditions1(A, B):
             return 10*A.volumes > B.volumes
@@ -23,15 +30,16 @@ class TestingTree(GraphInitializer):
         stock_types_with_identifiers = \
             [ProcessingUtilities.EventTypeOrPatternAndIdentifier(type, i) for i, type in enumerate(stocks)]
         root_node = PatternQueryGraph.ConditionNode(ProcessingUtilities.ListWrapper(), ProcessingUtilities.Seq([-1, -3]),
-                                                    pattern_queries.time_limit, identifier=-2,
+                                                    pattern_query.time_limit, identifier=-2,
                                                     conditions=[ProcessingUtilities.Condition(conditions1, [0, 3])])
+        root_node.set_output_interface(output_interface)
         left_son = PatternQueryGraph.ConditionNode(ProcessingUtilities.ListWrapper(), ProcessingUtilities.And(),
-                                                    pattern_queries.time_limit, identifier=-1,
-                                                    conditions=[ProcessingUtilities.Condition(conditions2, [0, 1])])
+                                                   pattern_query.time_limit, identifier=-1,
+                                                   conditions=[ProcessingUtilities.Condition(conditions2, [0, 1])])
         right_son = PatternQueryGraph.ConditionNode(ProcessingUtilities.ListWrapper(), ProcessingUtilities.And(),
-                                                   pattern_queries.time_limit, identifier=-3,
-                                                   conditions=[])
-        events = [PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_queries[0].time_limit, stock_and_id)
+                                                    pattern_query.time_limit, identifier=-3,
+                                                    conditions=[])
+        events = [PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_query.time_limit, stock_and_id)
                   for stock_and_id in stock_types_with_identifiers]
         left_son.set_children([events[0], events[1]])
         right_son.set_children([events[2], events[3]])
@@ -61,13 +69,6 @@ class LeftDeepTreeInitializer(GraphInitializer):
         :return: PatternQueryGraph.PatternQueryGraph that is a left deep tree representing the pattern query
         """
         def get_params_to_operator_construction():
-            """
-            this function is responsible to output to the operator builder the correct params that he need according to
-            its type
-            :param i:
-            :param operator_type:
-            :return:
-            """
             if operator_type == ProcessingUtilities.Seq or operator_type == ProcessingUtilities.And:
                 return [initial_condition_node_identifier + 1, i]
 
@@ -77,6 +78,8 @@ class LeftDeepTreeInitializer(GraphInitializer):
                       for event_and_identifier in pattern_query.event_pattern.event_types_or_patterns}
         events = pattern_query.event_pattern.event_types_or_patterns if type(operator) != ProcessingUtilities.Seq \
             else ProcessingUtilities.Seq.get_sorted_by_identifier_order(event_dict, operator.identifiers_order)
+
+        # our own condition node identifiers
         initial_condition_node_identifier = -1
         events_num = len(events)
         conditions = pattern_query.conditions
@@ -84,6 +87,8 @@ class LeftDeepTreeInitializer(GraphInitializer):
         old_parent = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_query.time_limit, events[0])
         leaves = [old_parent]
         seen_events = {events[0].identifier}
+
+        # building the tree bottom-up
         if events_num > 1:
             for i in range(1, events_num):
                 right_child = PatternQueryGraph.EventNode(ProcessingUtilities.ListWrapper(), pattern_query.time_limit,
@@ -130,10 +135,21 @@ class NaiveMultipleTreesGraphBasedProcessing(ProcessingUtilities.EvaluationModel
 
     def set_pattern_queries(self, pattern_queries: typing.Iterable[ProcessingUtilities.CleanPatternQuery],
                             output_interfaces: typing.List[ProcessingUtilities.OutputInterface]):
+        """
+        initializes the graphs in our evaluation model according to the queries and corresponding output interfaces
+        using the graph initializer class
+        :param pattern_queries: the model's pattern queries
+        :param output_interfaces: the corresponding output interfaces to the model's pattern queries
+        """
         self.graphs = [self.graph_initializer.get_graph(pattern_query, output_interface) for
                        pattern_query, output_interface in zip(pattern_queries, output_interfaces)]
 
     def handle_event(self, event, event_counter):
+        """
+        passes the event to the model's trees in an attempt to try to add it where fit as a partial result
+        :param event: the event to add
+        :param event_counter: the corresponding event counter if the pattern uses fixed window instead of time limit
+        """
         for graph in self.graphs:
             if graph.use_const_window:
                 event.set_time_to_counter(event_counter)

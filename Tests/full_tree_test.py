@@ -1,3 +1,4 @@
+
 import Processor
 import ProcessingUtilities
 from GraphBasedProcessing import GraphBasedProcessingUtilities
@@ -10,4 +11,4 @@ if __name__ == "__main__":
     full_tree_processor = GraphBasedProcessingUtilities.NaiveMultipleTreesGraphBasedProcessing(full_deep_initializer)
     processor.query([ProcessingUtilities.CleanPatternQuery(None, [], 50)], full_tree_processor,
                     ProcessingUtilities.TrivialInputInterface(),
-                    ProcessingUtilities.FileOutputInterface(["full_tree_test_results.txt"]))
+                    [ProcessingUtilities.FileOutputInterface("full_tree_test_results.txt")])
