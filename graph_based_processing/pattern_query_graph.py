@@ -93,7 +93,8 @@ class ConditionNode(Node):
                 if self.parent:
                     self.parent.try_add_partial_result(new_result, self)
 
-        if self.is_root() and self.output_interface.output_while_running():
+        if self.is_root() and self.output_interface is not None and \
+                self.output_interface.output_while_running():
             results = self.partial_results_buffer.pop_results()
             self.output_interface.output_results\
                 ([list(partial_result.completely_unpack().values()) for partial_result in results])
