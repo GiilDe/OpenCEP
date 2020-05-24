@@ -1,5 +1,5 @@
-import processing_utilities
-from graph_based_processing.pattern_query_graph import *
+from .. import processing_utilities
+from .pattern_query_graph import *
 import typing
 
 

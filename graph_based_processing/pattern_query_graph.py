@@ -1,5 +1,5 @@
 from typing import List, Union
-import processing_utilities
+from .. import processing_utilities
 
 
 class Node:

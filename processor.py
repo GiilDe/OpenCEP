@@ -1,7 +1,7 @@
-import processing_utilities
+from . import processing_utilities
 import typing
-from file_sort import sort_file
-from graph_based_processing import graph_based_processing_utilities
+from .file_sort import sort_file
+from .graph_based_processing import graph_based_processing_utilities
 import time
 
 
@@ -101,13 +101,36 @@ class TimeCalcProcessor:
                 (graph_based_processing_utilities.LeftDeepTreeInitializer())
         self.evaluation_model.set_pattern_queries(clean_pattern_queries, [None]*len(clean_pattern_queries))
 
+    def get_event_from_line(self, line):
+        """
+        parses a line from the event input file into an event class
+        :param line: the line from the input file representing to current event
+        """
+        def convert_value(value: str):
+            def isfloat(val: str):
+                try:
+                    float(val)
+                    return True
+                except ValueError:
+                    return False
+            if str.isdigit(value):
+                return int(value)
+            if isfloat(value):
+                return float(value)
+            return value
+        values = line[:-1].split(',')
+        for i, value in enumerate(values):
+            values[i] = convert_value(value)
+        new_event = processing_utilities.Event(self.attribute_names, values, self.time_name, self.type_name)
+        return new_event
+
     def query(self, events: str):
         counter = 0
-        start_time = time.time()
-        for line in events:
+        start_time = time.perf_counter_ns()
+        for line in events.split("\n"):
             event = self.get_event_from_line(line)
             self.evaluation_model.handle_event(event, counter)
             counter += 1
 
-        return time.time() - start_time
-
+        finish_time = time.perf_counter_ns()
+        return finish_time - start_time
