@@ -119,7 +119,7 @@ class LeftDeepTreeInitializer(GraphInitializer):
 
         root_node = new_parent if events_num > 1 else old_parent
         root_node.set_output_interface(output_interface)
-        pattern_query_graph = PatternQueryGraph(root_node, leaves, pattern_query.use_const_window)
+        pattern_query_graph = PatternQueryGraph(root_node, leaves, inner_nodes, pattern_query.use_const_window)
         return pattern_query_graph
 
 
@@ -162,3 +162,7 @@ class NaiveMultipleTreesGraphBasedProcessing(processing_utilities.EvaluationMode
 
     def get_results(self) -> typing.List[typing.List]:
         return [graph.root_node.get_results() for graph in self.graphs]
+
+    def clear(self):
+        for g in self.graphs:
+            g.clear()

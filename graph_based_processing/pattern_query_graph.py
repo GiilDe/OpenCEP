@@ -2,6 +2,11 @@ from typing import List, Union
 from .. import processing_utilities
 
 
+class IntWrapper:
+    val: int = 0
+
+steps_counter = IntWrapper()
+
 class Node:
     """
     Abstract class, predecessor of ConditionNode and EventNode
@@ -41,6 +46,8 @@ class Node:
         """
         return [list(partial_result.completely_unpack().values()) for partial_result in self.partial_results_buffer]
 
+    def clear(self):
+        self.partial_results_buffer.clear()
 
 class ConditionNode(Node):
     """
@@ -71,7 +78,11 @@ class ConditionNode(Node):
         :param partial_result: partial_result to check
         :return: True if partial result is within the time limit and all conditions hold, False otherwise
         """
-        return partial_result.end_time - partial_result.start_time <= self.time_limit and \
+        steps_counter.val += 1
+        time_limit = partial_result.end_time - partial_result.start_time <= self.time_limit
+        if time_limit:
+            steps_counter.val += len(self.conditions)
+        return time_limit and \
                all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def try_add_partial_result(self, partial_result: processing_utilities.PartialResult, diffuser_child: Node):
@@ -128,6 +139,7 @@ class EventNode(Node):
 
     def _check_conditions(self, partial_result: Union[processing_utilities.PartialResult, processing_utilities.Event])\
             -> bool:
+        steps_counter.val += len(self.conditions)
         return all(condition.check_condition(partial_result) for condition in self.conditions)
 
     def try_add_partial_result(self, event: processing_utilities.Event):
@@ -136,6 +148,7 @@ class EventNode(Node):
         :param event: an event corresponding to this leaf node
         :return: self
         """
+        steps_counter.val += 1
         if self.event_type == event.get_type():
             partial_result = processing_utilities.PartialResult({self.event_identifier: event},
                                                                 identifier=self.event_identifier)
@@ -149,7 +162,8 @@ class PatternQueryGraph:
     """
     a graph that represents a pattern query without operator nesting
     """
-    def __init__(self, root_node: ConditionNode, event_nodes: List[EventNode], use_const_window=False):
+    def __init__(self, root_node: ConditionNode, event_nodes: List[EventNode], inner_nodes: List[ConditionNode],
+                 use_const_window=False):
         """
         :param root_node: graph's root node
         :param event_nodes: graph's event nodes
@@ -158,6 +172,13 @@ class PatternQueryGraph:
         """
         self.root_node = root_node
         self.event_nodes = event_nodes
+        self.inner_nodes = inner_nodes
         self.use_const_window = use_const_window
+        steps_counter.val = 0
+        self.steps_counter = steps_counter
+        
+    def clear(self):
+        for node in self.event_nodes + self.inner_nodes:
+            node.clear()
 
 
