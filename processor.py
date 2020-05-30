@@ -55,7 +55,8 @@ class Processor:
     def query(self, pattern_queries: typing.List[processing_utilities.PatternQuery],
               evaluation_model: processing_utilities.EvaluationModel,
               input_interface: processing_utilities.InputInterface = processing_utilities.TrivialInputInterface(),
-              output_interfaces: typing.List[processing_utilities.OutputInterface]=None):
+              output_interfaces: typing.List[processing_utilities.OutputInterface]=None,
+              print_progress=None):
         """
         creates the evaluation model based on the give queries and the corresponding output interfaces, and parses event
         lines from the event files and passes them as event objects to the evaluation model
@@ -74,6 +75,8 @@ class Processor:
         for line in data_stream:
             event = self.get_event_from_line(line)
             evaluation_model.handle_event(event, counter)
+            if print_progress is not None and counter % print_progress == 0:
+                print(str(counter))
             counter += 1
         data_stream.close()
         results = evaluation_model.get_results()
