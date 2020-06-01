@@ -130,13 +130,13 @@ class TimeCalcProcessor:
     def query(self, events: str):
         self.evaluation_model.graphs[0].steps_counter.val = 0
         counter = 0
-        start_time = time.perf_counter_ns()
+        start_time = time.perf_counter()
         for line in events.split("\n"):
             event = self.get_event_from_line(line)
             self.evaluation_model.handle_event(event, counter)
             counter += 1
 
-        finish_time = time.perf_counter_ns()
+        finish_time = time.perf_counter()
         steps = self.evaluation_model.graphs[0].steps_counter.val
         self.evaluation_model.clear()
         return finish_time - start_time, steps
