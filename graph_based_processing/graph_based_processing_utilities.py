@@ -1,4 +1,3 @@
-from .. import processing_utilities
 from .pattern_query_graph import *
 import typing
 
