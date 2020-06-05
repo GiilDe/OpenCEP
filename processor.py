@@ -34,6 +34,7 @@ class Processor:
         parses a line from the event input file into an event class
         :param line: the line from the input file representing to current event
         """
+
         def convert_value(value: str):
             def isfloat(val: str):
                 try:
@@ -41,11 +42,13 @@ class Processor:
                     return True
                 except ValueError:
                     return False
+
             if str.isdigit(value):
                 return int(value)
             if isfloat(value):
                 return float(value)
             return value
+
         values = line[:-1].split(',')
         for i, value in enumerate(values):
             values[i] = convert_value(value)
@@ -55,11 +58,12 @@ class Processor:
     def query(self, pattern_queries: typing.List[processing_utilities.PatternQuery],
               evaluation_model: processing_utilities.EvaluationModel,
               input_interface: processing_utilities.InputInterface = processing_utilities.TrivialInputInterface(),
-              output_interfaces: typing.List[processing_utilities.OutputInterface]=None,
+              output_interfaces: typing.List[processing_utilities.OutputInterface] = None,
               print_progress=None):
         """
         creates the evaluation model based on the give queries and the corresponding output interfaces, and parses event
         lines from the event files and passes them as event objects to the evaluation model
+        :param print_progress:
         :param pattern_queries: the pattern queries to query by
         :param evaluation_model: the evaluation model to use
         :param input_interface:
@@ -100,15 +104,16 @@ class TimeCalcProcessor:
         interface = processing_utilities.TrivialInputInterface()
         clean_pattern_queries = interface.get_clean_pattern_queries(pattern_queries)
         self.evaluation_model = \
-            graph_based_processing_utilities.NaiveMultipleTreesGraphBasedProcessing\
+            graph_based_processing_utilities.NaiveMultipleTreesGraphBasedProcessing \
                 (graph_based_processing_utilities.LeftDeepTreeInitializer())
-        self.evaluation_model.set_pattern_queries(clean_pattern_queries, [None]*len(clean_pattern_queries))
+        self.evaluation_model.set_pattern_queries(clean_pattern_queries, [None] * len(clean_pattern_queries))
 
     def get_event_from_line(self, line):
         """
         parses a line from the event input file into an event class
         :param line: the line from the input file representing to current event
         """
+
         def convert_value(value: str):
             def isfloat(val: str):
                 try:
@@ -116,11 +121,13 @@ class TimeCalcProcessor:
                     return True
                 except ValueError:
                     return False
+
             if str.isdigit(value):
                 return int(value)
             if isfloat(value):
                 return float(value)
             return value
+
         values = line[:-1].split(',')
         for i, value in enumerate(values):
             values[i] = convert_value(value)
