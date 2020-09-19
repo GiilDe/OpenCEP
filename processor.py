@@ -142,8 +142,9 @@ class TimeCalcProcessor:
         evaluation_model.set_pattern_queries(clean_pattern_queries, output_interfaces)
 
         counter = 0
+        event_list = events.split("\n")
         start_time = time.perf_counter()
-        for line in events.split("\n"):
+        for line in event_list:
             event = self.get_event_from_line(line)
             evaluation_model.handle_event(event, counter)
             counter += 1
