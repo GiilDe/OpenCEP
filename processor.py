@@ -117,7 +117,7 @@ class TimeCalcProcessor:
             if isfloat(value):
                 return float(value)
             return value
-        values = line[:-1].split(',')
+        values = line.split(',')
         for i, value in enumerate(values):
             values[i] = convert_value(value)
         new_event = processing_utilities.Event(self.attribute_names, values, self.time_name, self.type_name)
