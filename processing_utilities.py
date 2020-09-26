@@ -376,6 +376,25 @@ class And(Operator):
                 self.contains_same_event_multiple_times(self.get_events_from_partial_results(partial_results).values())]
 
 
+class Or(Operator):
+    """
+    Class representing an and operator
+    """
+
+    def __init__(self, *args):
+        pass
+
+    def get_new_results(self, children_buffers: typing.List[MemoryModel],
+                        new_result: PartialResult, identifier) -> typing.List[PartialResult]:
+        """
+        :param children_buffers: list where each cell is a list that holds partial matches
+        :param new_result: the new partial results to be composed to existing partial results
+        :param identifier: the relevant identifier
+        :return: returns every combination that does not contain the same event twice
+        """
+        return [new_result]
+
+
 class InputInterface:
     """
     This is an abstract class to generalize the possible ways of processing various types of PatterQuery
